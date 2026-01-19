@@ -1,6 +1,4 @@
 {
-    "installCommand": "if [ ! -d $HOME/flutter ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1 $HOME/flutter; fi && $HOME/flutter/bin/flutter config --enable-web && $HOME/flutter/bin/flutter pub get",
-    "buildCommand": "$HOME/flutter/bin/flutter build web --release --web-renderer canvaskit --no-tree-shake-icons",
     "outputDirectory": "build/web",
     "framework": null,
     "routes": [
