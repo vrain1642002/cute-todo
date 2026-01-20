@@ -46,10 +46,6 @@ class _PetWidgetState extends State<PetWidget>
         return '🐱';
       case PetType.dog:
         return '🐶';
-      case PetType.bunny:
-        return '🐰';
-      case PetType.plant:
-        return '🌱';
     }
   }
 
@@ -73,11 +69,11 @@ class _PetWidgetState extends State<PetWidget>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -103,7 +99,7 @@ class _PetWidgetState extends State<PetWidget>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.lightPrimary.withOpacity(0.2),
+                    color: AppColors.lightPrimary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -227,7 +223,7 @@ class _PetWidgetState extends State<PetWidget>
             child: LinearProgressIndicator(
               value: value / 100,
               minHeight: 6,
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),

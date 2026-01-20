@@ -70,7 +70,7 @@ class KanbanColumn extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [headerColor.withOpacity(0.2), headerColor.withOpacity(0.05)],
+          colors: [headerColor.withValues(alpha: 0.2), headerColor.withValues(alpha: 0.05)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -83,14 +83,14 @@ class KanbanColumn extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [headerColor, headerColor.withOpacity(0.7)],
+                colors: [headerColor, headerColor.withValues(alpha: 0.7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: headerColor.withOpacity(0.3),
+                  color: headerColor.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -120,7 +120,7 @@ class KanbanColumn extends StatelessWidget {
                   '${todos.length} ${todos.length == 1 ? 'task' : 'tasks'}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: headerColor.withOpacity(0.7),
+                    color: headerColor.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -129,7 +129,7 @@ class KanbanColumn extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: headerColor.withOpacity(0.15),
+              color: headerColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -163,7 +163,7 @@ class KanbanColumn extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color:
-                isHovering ? headerColor.withOpacity(0.1) : Colors.transparent,
+                isHovering ? headerColor.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius:
                 const BorderRadius.vertical(bottom: Radius.circular(18)),
           ),
@@ -187,7 +187,7 @@ class KanbanColumn extends StatelessWidget {
               size: 48,
               color: isHovering
                   ? headerColor
-                  : AppColors.lightTextSecondary.withOpacity(0.3),
+                  : AppColors.lightTextSecondary.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 12),
             Text(
@@ -197,7 +197,7 @@ class KanbanColumn extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: isHovering
                     ? headerColor
-                    : AppColors.lightTextSecondary.withOpacity(0.5),
+                    : AppColors.lightTextSecondary.withValues(alpha: 0.5),
               ),
             ),
             if (!isHovering)
@@ -205,7 +205,7 @@ class KanbanColumn extends StatelessWidget {
                 kIsWeb ? 'Drag tasks here' : 'Hold & drag tasks here',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.lightTextSecondary.withOpacity(0.4),
+                  color: AppColors.lightTextSecondary.withValues(alpha: 0.4),
                 ),
               ),
           ],
@@ -225,7 +225,7 @@ class KanbanColumn extends StatelessWidget {
             height: 80,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: headerColor.withOpacity(0.1),
+              color: headerColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: headerColor,

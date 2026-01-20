@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 import '../models/todo_model.dart';
 
 class FirestoreService {
@@ -13,7 +14,7 @@ class FirestoreService {
           await _firestore.collection('todos').add(todo.toFirestore());
       return docRef.id;
     } catch (e) {
-      print('Error creating todo: $e');
+      debugPrint('Error creating subtask: $e');
       rethrow;
     }
   }
@@ -26,7 +27,7 @@ class FirestoreService {
           .doc(todo.id)
           .update(todo.toFirestore());
     } catch (e) {
-      print('Error updating todo: $e');
+      debugPrint('Error updating todo: $e');
       rethrow;
     }
   }
@@ -36,7 +37,7 @@ class FirestoreService {
     try {
       await _firestore.collection('todos').doc(todoId).delete();
     } catch (e) {
-      print('Error deleting todo: $e');
+      debugPrint('Error reordering todo: $e');
       rethrow;
     }
   }
@@ -87,7 +88,7 @@ class FirestoreService {
 
       await _firestore.collection('todos').doc(todoId).update(updates);
     } catch (e) {
-      print('Error updating todo status: $e');
+      debugPrint('Error updating todo status: $e');
       rethrow;
     }
   }
@@ -107,7 +108,7 @@ class FirestoreService {
 
       await batch.commit();
     } catch (e) {
-      print('Error batch updating todo orders: $e');
+      debugPrint('Error batch updating todo orders: $e');
       rethrow;
     }
   }
@@ -175,7 +176,7 @@ class FirestoreService {
 
       await _firestore.collection('todos').doc(todoId).update(updates);
     } catch (e) {
-      print('Error toggling todo status: $e');
+      debugPrint('Error toggling subtask: $e');
       rethrow;
     }
   }
@@ -219,7 +220,7 @@ class FirestoreService {
         'totalInProgress': totalInProgress.docs.length,
       };
     } catch (e) {
-      print('Error getting completion stats: $e');
+      debugPrint('Error getting completion stats: $e');
       return {
         'completedToday': 0,
         'totalCompleted': 0,
@@ -247,7 +248,7 @@ class FirestoreService {
 
       return categories.toList()..sort();
     } catch (e) {
-      print('Error getting categories: $e');
+      debugPrint('Error getting categories: $e');
       return [];
     }
   }

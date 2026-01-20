@@ -24,7 +24,7 @@ class KanbanTaskCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isDragging
-            ? AppColors.lightPrimary.withOpacity(0.1)
+            ? AppColors.lightPrimary.withValues(alpha: 0.1)
             : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
@@ -34,7 +34,7 @@ class KanbanTaskCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isDragging
-                ? AppColors.lightPrimary.withOpacity(0.3)
+                ? AppColors.lightPrimary.withValues(alpha: 0.3)
                 : AppColors.cardShadow,
             blurRadius: isDragging ? 16 : 8,
             offset: const Offset(0, 4),
@@ -105,16 +105,13 @@ class KanbanTaskCard extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Bottom row with due date, category and energy
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    if (todo.dueDate != null) ...[
-                      _buildDueDateChip(),
-                      const SizedBox(width: 8),
-                    ],
-                    if (todo.category != TaskCategory.general) ...[
+                    if (todo.dueDate != null) _buildDueDateChip(),
+                    if (todo.category != TaskCategory.general)
                       _buildCategoryChip(),
-                      const SizedBox(width: 8),
-                    ],
                     if (todo.energyLevel != EnergyLevel.any) _buildEnergyChip(),
                   ],
                 ),
@@ -152,9 +149,9 @@ class KanbanTaskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -206,7 +203,7 @@ class KanbanTaskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -239,7 +236,7 @@ class KanbanTaskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: categoryInfo.color.withOpacity(0.1),
+        color: categoryInfo.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -266,9 +263,9 @@ class KanbanTaskCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: energyInfo.color.withOpacity(0.1),
+        color: energyInfo.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: energyInfo.color.withOpacity(0.3)),
+        border: Border.all(color: energyInfo.color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

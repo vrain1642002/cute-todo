@@ -64,19 +64,40 @@ class TodoModel {
     DateTime? updatedAt,
     this.autoDelete = false,
     this.expiresAt,
-  })  : xpReward = xpReward ?? _calculateXpReward(priority),
+  })  : xpReward = xpReward ?? _calculateXpReward(priority, category),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  static int _calculateXpReward(TodoPriority priority) {
+  static int _calculateXpReward(TodoPriority priority, TaskCategory category) {
+    int baseXp = 0;
     switch (priority) {
       case TodoPriority.low:
-        return 10;
+        baseXp = 10;
+        break;
       case TodoPriority.medium:
-        return 25;
+        baseXp = 25;
+        break;
       case TodoPriority.high:
-        return 50;
+        baseXp = 50;
+        break;
     }
+
+    // Category Bonuses
+    switch (category) {
+      case TaskCategory.work:
+      case TaskCategory.study:
+      case TaskCategory.exercise:
+        baseXp += 15; // Hard work bonus
+        break;
+      case TaskCategory.housework:
+      case TaskCategory.creative:
+        baseXp += 10; // Active bonus
+        break;
+      default:
+        break;
+    }
+
+    return baseXp;
   }
 
   // Convert from Firestore

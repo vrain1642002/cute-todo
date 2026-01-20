@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum PetType { cat, dog, bunny, plant }
+enum PetType { cat, dog }
+
+enum PetStage { baby, adult }
 
 enum PetMood { happy, neutral, sad, sleeping }
 
@@ -13,6 +15,10 @@ class PetModel {
   final int xp;
   final DateTime lastFed;
 
+  final PetStage stage;
+  final int variant; // 0-3 for different skins
+  final int evolutionProgress; // 0-100 to next stage
+
   PetModel({
     this.type = PetType.cat,
     this.name = 'Mochi',
@@ -21,6 +27,9 @@ class PetModel {
     this.level = 1,
     this.xp = 0,
     required this.lastFed,
+    this.stage = PetStage.baby,
+    this.variant = 0,
+    this.evolutionProgress = 0,
   });
 
   PetMood get mood {
@@ -41,6 +50,12 @@ class PetModel {
       level: map['level'] ?? 1,
       xp: map['xp'] ?? 0,
       lastFed: (map['lastFed'] as Timestamp).toDate(),
+      stage: PetStage.values.firstWhere(
+        (e) => e.name == map['stage'],
+        orElse: () => PetStage.baby,
+      ),
+      variant: map['variant'] ?? 0,
+      evolutionProgress: map['evolutionProgress'] ?? 0,
     );
   }
 
@@ -53,6 +68,9 @@ class PetModel {
       'level': level,
       'xp': xp,
       'lastFed': Timestamp.fromDate(lastFed),
+      'stage': stage.name,
+      'variant': variant,
+      'evolutionProgress': evolutionProgress,
     };
   }
 
@@ -64,6 +82,9 @@ class PetModel {
     int? level,
     int? xp,
     DateTime? lastFed,
+    PetStage? stage,
+    int? variant,
+    int? evolutionProgress,
   }) {
     return PetModel(
       type: type ?? this.type,
@@ -73,6 +94,9 @@ class PetModel {
       level: level ?? this.level,
       xp: xp ?? this.xp,
       lastFed: lastFed ?? this.lastFed,
+      stage: stage ?? this.stage,
+      variant: variant ?? this.variant,
+      evolutionProgress: evolutionProgress ?? this.evolutionProgress,
     );
   }
 }

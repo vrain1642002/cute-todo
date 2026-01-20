@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
 import 'services/theme_service.dart';
 import 'services/voice_service.dart';
+import 'services/localization_service.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -37,14 +39,26 @@ class CuteTodoApp extends StatelessWidget {
         Provider<FirestoreService>(create: (_) => FirestoreService()),
         ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
         ChangeNotifierProvider<VoiceService>(create: (_) => VoiceService()),
+        ChangeNotifierProvider<LocalizationService>(
+            create: (_) => LocalizationService()), // Add Provider
       ],
-      child: Consumer<ThemeService>(
-        builder: (context, themeService, child) {
+      child: Consumer2<ThemeService, LocalizationService>(
+        builder: (context, themeService, localizationService, child) {
           final palette = themeService.currentPalette;
 
           return MaterialApp(
             title: 'Cute Todo',
             debugShowCheckedModeBanner: false,
+            locale: localizationService.locale, // Set locale
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('vi', ''),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             // Dynamically build theme from current palette
             theme: ThemeData(
               useMaterial3: true,
@@ -55,8 +69,6 @@ class CuteTodoApp extends StatelessWidget {
                 primary: palette.primary,
                 secondary: palette.secondary,
                 surface: palette.surface,
-                background: palette.background,
-                onBackground: palette.text,
                 onSurface: palette.text,
                 brightness: themeService.currentMode == AppThemeMode.night
                     ? Brightness.dark

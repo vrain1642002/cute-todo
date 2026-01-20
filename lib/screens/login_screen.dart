@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import '../core/constants/colors.dart';
@@ -11,38 +12,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -75,163 +46,179 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.lightPrimary,
-              AppColors.lightSecondary,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.lightPrimary,
+                  AppColors.lightSecondary,
+                ],
+              ),
+            ),
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+              duration: 3.seconds,
+              color: Colors.white.withValues(alpha: 0.2),
+              angle: 45),
+
+          // Main Content
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Mascot Logo
+                      // Mascot / Logo
                       Container(
-                        width: 150,
-                        height: 150,
+                        width: 160,
+                        height: 160,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 20,
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 30,
                               offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
+                        child: ClipOval(
                           child: Image.asset(
                             'assets/images/mascot.png',
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) {
-                              return const Icon(
-                                Icons.check_circle_outline,
-                                size: 60,
-                                color: AppColors.lightPrimary,
-                              );
-                            },
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.pets_rounded,
+                              size: 80,
+                              color: AppColors.lightPrimary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
+                      )
+                          .animate()
+                          .scale(duration: 600.ms, curve: Curves.elasticOut)
+                          .then()
+                          .moveY(
+                              begin: 0,
+                              end: -10,
+                              duration: 2.seconds,
+                              curve: Curves.easeInOut)
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .moveY(
+                              begin: 0,
+                              end: -10,
+                              duration: 2.seconds,
+                              curve: Curves.easeInOut),
 
-                      // Title
-                      const Text(
-                        'Cute Todo',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Make productivity fun! ✨',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 40),
 
-                      // Features
-                      _buildFeatureItem('🎯', 'Track your tasks with styles'),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem('🏆', 'Earn XP and level up'),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem('🔥', 'Build your streak'),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem('⏱️', 'Stay focused with Pomodoro'),
-                      const SizedBox(height: 48),
-
-                      // Sign In Button
-                      _isLoading
-                          ? const CircularProgressIndicator(
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            )
-                          : ElevatedButton.icon(
-                              onPressed: _handleGoogleSignIn,
-                              icon: Image.network(
-                                'https://www.google.com/favicon.ico',
-                                height: 24,
-                                width: 24,
-                                errorBuilder: (context, error, stack) {
-                                  return const Icon(Icons.login, size: 24);
-                                },
-                              ),
-                              label: const Text('Sign in with Google'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.lightText,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 16,
+                      // Title & Subtitle
+                      Column(
+                        children: [
+                          const Text(
+                            'Cute Todo',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black12,
+                                  offset: Offset(0, 2),
+                                  blurRadius: 4,
                                 ),
-                                minimumSize: const Size(280, 56),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 4,
+                              ],
+                            ),
+                          ).animate().fadeIn(delay: 300.ms).moveY(begin: 20),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Make productivity fun! ✨',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
+                          )
+                              .animate()
+                              .fadeIn(delay: 500.ms)
+                              .scale(duration: 400.ms),
+                        ],
+                      ),
+
+                      const SizedBox(height: 80),
+
+                      // Login Button
+                      if (_isLoading)
+                        const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      else
+                        ElevatedButton.icon(
+                          onPressed: _handleGoogleSignIn,
+                          icon: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Image.network(
+                              'https://www.google.com/favicon.ico',
+                              height: 18,
+                              width: 18,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.login,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          label: const Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.lightPrimary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                            minimumSize: const Size(double.infinity, 56),
+                            elevation: 0, // Flat modern look,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 700.ms)
+                            .moveY(begin: 40, duration: 500.ms)
+                            .shimmer(delay: 1500.ms, duration: 1.seconds),
+
                       const SizedBox(height: 24),
 
-                      // Privacy text
-                      const Text(
-                        'Your data is secure and synced across devices',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white60,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(String emoji, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 24),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],

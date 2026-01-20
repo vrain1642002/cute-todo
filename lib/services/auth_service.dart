@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 import '../models/user_model.dart';
 
 class AuthService {
@@ -61,13 +62,23 @@ class AuthService {
             .doc(userCredential.user!.uid)
             .set(userModel.toFirestore());
       } else {
-        // Load existing user
+        // Load existing user and update profile data from Google
         userModel = UserModel.fromFirestore(userDoc);
+
+        // Refresh profile data if changed
+        if (userModel.photoURL != userCredential.user!.photoURL ||
+            userModel.displayName != userCredential.user!.displayName) {
+          userModel = userModel.copyWith(
+            photoURL: userCredential.user!.photoURL,
+            displayName: userCredential.user!.displayName,
+          );
+          await updateUserData(userModel);
+        }
       }
 
       return userModel;
     } catch (e) {
-      print('Error signing in with Google: $e');
+      debugPrint('Error signing in with Google: $e');
       return null;
     }
   }
@@ -80,7 +91,7 @@ class AuthService {
         _auth.signOut(),
       ]);
     } catch (e) {
-      print('Error signing out: $e');
+      debugPrint('Error signing out: $e');
     }
   }
 
@@ -93,7 +104,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting user data: $e');
+      debugPrint('Error fetching user data: $e');
       return null;
     }
   }
@@ -106,7 +117,7 @@ class AuthService {
           .doc(user.uid)
           .update(user.toFirestore());
     } catch (e) {
-      print('Error updating user data: $e');
+      debugPrint('Error updating user data: $e');
     }
   }
 
@@ -131,7 +142,7 @@ class AuthService {
 
       return updatedUser;
     } catch (e) {
-      print('Error adding XP: $e');
+      debugPrint('Error adding XP: $e');
       return null;
     }
   }
@@ -146,7 +157,7 @@ class AuthService {
       final updatedUser = user.copyWith(streak: user.streak + 1);
       await updateUserData(updatedUser);
     } catch (e) {
-      print('Error updating streak: $e');
+      debugPrint('Google Sign In Error: $e');
     }
   }
 }
