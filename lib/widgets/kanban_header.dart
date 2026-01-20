@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/theme_service.dart';
+import '../services/localization_service.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/colors.dart';
 
 class KanbanHeader extends StatelessWidget {
@@ -39,9 +41,11 @@ class KanbanHeader extends StatelessWidget {
             child: CircleAvatar(
               radius: 26,
               backgroundImage:
-                  user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                  (user.photoURL != null && user.photoURL!.isNotEmpty)
+                      ? NetworkImage(user.photoURL!)
+                      : null,
               backgroundColor: palette.primary.withValues(alpha: 0.2),
-              child: user.photoURL == null
+              child: (user.photoURL == null || user.photoURL!.isEmpty)
                   ? Text(
                       user.displayName.isNotEmpty
                           ? user.displayName[0].toUpperCase()
@@ -63,7 +67,7 @@ class KanbanHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, ${user.displayName.split(' ').first}! 👋',
+                  '${context.read<LocalizationService>().translate('hello')}, ${user.displayName.split(' ').first}! 👋',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -74,14 +78,9 @@ class KanbanHeader extends StatelessWidget {
                 Row(
                   children: [
                     _buildStatChip(
-                      icon: Icons.stars_rounded,
-                      label: 'Level ${user.level}',
-                      color: palette.secondary,
-                    ),
-                    const SizedBox(width: 10),
-                    _buildStatChip(
                       icon: Icons.local_fire_department_rounded,
-                      label: '${user.streak} days',
+                      label:
+                          '${user.streak} ${context.read<LocalizationService>().translate('days')}',
                       color: AppColors.error,
                     ),
                   ],

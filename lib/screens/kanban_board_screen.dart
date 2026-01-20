@@ -227,10 +227,12 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✨ Your pet evolved! ✨'),
+              SnackBar(
+                content: Text(context
+                    .read<LocalizationService>()
+                    .translate('pet_evolved')),
                 backgroundColor: Colors.purpleAccent,
-                duration: Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -248,7 +250,8 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
               children: [
                 const Icon(Icons.celebration, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('🎉 Great job! +${todo.xpReward} XP'),
+                Text(
+                    '🎉 ${context.read<LocalizationService>().translate('great_job')} +${todo.xpReward} XP'),
               ],
             ),
             backgroundColor: AppColors.success,
@@ -298,9 +301,17 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
                       onSignOut: _handleSignOut,
                       onSettingsTap: _showSettingsDialog,
                     ),
-                  _buildXpBar(),
-                  const SizedBox(height: 16),
-                  _buildPetArea(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(child: _buildXpBar()),
+                        const SizedBox(width: 12),
+                        _buildPetArea(),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Expanded(
                     child: KanbanBoard(
@@ -331,7 +342,7 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
                 backgroundColor: palette.primary,
                 icon: Icon(Icons.add_rounded, color: palette.surface),
                 label: Text(
-                  'Add Task',
+                  context.read<LocalizationService>().translate('add_task'),
                   style: TextStyle(
                       color: palette.surface, fontWeight: FontWeight.w600),
                 ),
@@ -344,72 +355,71 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
   }
 
   Widget _buildXpBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.lightPrimary.withValues(alpha: 0.1),
-              AppColors.lightAccent.withValues(alpha: 0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: AppColors.lightPrimary.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded,
-                        size: 20, color: AppColors.lightPrimary),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${_currentUser!.xp} / ${_currentUser!.xpNeeded} XP',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.lightText,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${(_currentUser!.progressPercentage * 100).toInt()}%',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: _currentUser!.progressPercentage,
-                minHeight: 8,
-                backgroundColor: AppColors.lightPrimary.withValues(alpha: 0.2),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.lightPrimary),
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.lightPrimary.withValues(alpha: 0.1),
+            AppColors.lightAccent.withValues(alpha: 0.1),
           ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border:
+            Border.all(color: AppColors.lightPrimary.withValues(alpha: 0.2)),
+        color: Colors.white.withValues(alpha: 0.4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.bolt_rounded,
+                      size: 16, color: AppColors.lightPrimary),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_currentUser!.xp} / ${_currentUser!.xpNeeded} XP',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.lightText,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.lightPrimary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'LV. ${_currentUser!.level}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.lightPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: _currentUser!.progressPercentage,
+              minHeight: 6,
+              backgroundColor: AppColors.lightPrimary.withValues(alpha: 0.1),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.lightPrimary),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -417,45 +427,40 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
   Widget _buildPetArea() {
     if (_currentUser == null) return const SizedBox.shrink();
 
-    // If user has no pet, show Adopt button
+    // If user has no pet, show Adopt button (smaller)
     if (_currentUser!.pet == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: GestureDetector(
-          onTap: _adoptPet,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.lightPrimary, width: 2),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('🥁', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 12),
-                Text(
-                  'Adopt a Pet Companion!',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.lightPrimary,
-                  ),
+      return GestureDetector(
+        onTap: _adoptPet,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.lightPrimary, width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🥚', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 6),
+              Text(
+                context.read<LocalizationService>().translate('adopt'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.lightPrimary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    // Show Pet Widget
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: PetWidget(
-        pet: _currentUser!.pet!,
-        // onPetTap removed as per request
-      ),
+    // Show Pet Widget in Mini mode
+    return PetWidget(
+      pet: _currentUser!.pet!,
+      isMini: true,
     );
   }
 

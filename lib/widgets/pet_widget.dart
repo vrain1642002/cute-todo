@@ -5,11 +5,13 @@ import '../core/constants/colors.dart';
 class PetWidget extends StatefulWidget {
   final PetModel pet;
   final VoidCallback? onPetTap;
+  final bool isMini;
 
   const PetWidget({
     super.key,
     required this.pet,
     this.onPetTap,
+    this.isMini = false,
   });
 
   @override
@@ -67,7 +69,7 @@ class _PetWidgetState extends State<PetWidget>
     return GestureDetector(
       onTap: widget.onPetTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(widget.isMini ? 8 : 16),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
@@ -79,156 +81,113 @@ class _PetWidgetState extends State<PetWidget>
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Pet Name & Level
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  widget.pet.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: AppColors.lightText,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.lightPrimary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Lv.${widget.pet.level}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Animated Pet
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _bounceAnimation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(0, -_bounceAnimation.value),
-                      child: Text(
-                        _getPetEmoji(),
-                        style: const TextStyle(fontSize: 64),
-                      ),
-                    );
-                  },
-                ),
-                // Mood bubble
-                if (widget.pet.mood != PetMood.neutral)
-                  Positioned(
-                    right: -10,
-                    top: -10,
-                    child: AnimatedBuilder(
-                      animation: _bounceAnimation,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _bounceAnimation.value),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              _getMoodEmoji(),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Status Bars
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatBar(
-                  icon: Icons.favorite_rounded,
-                  color: Colors.redAccent,
-                  value: widget.pet.health,
-                  label: 'Health',
-                ),
-                const SizedBox(width: 12),
-                _buildStatBar(
-                  icon: Icons.sentiment_satisfied_rounded,
-                  color: Colors.orangeAccent,
-                  value: widget.pet.happiness,
-                  label: 'Joy',
-                ),
-              ],
-            ),
-          ],
-        ),
+        child: widget.isMini ? _buildMiniContent() : _buildFullContent(),
       ),
     );
   }
 
-  Widget _buildStatBar({
-    required IconData icon,
-    required Color color,
-    required int value,
-    required String label,
-  }) {
-    return Expanded(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+  Widget _buildMiniContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _bounceAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, -_bounceAnimation.value * 0.5),
+                  child: Text(
+                    _getPetEmoji(),
+                    style: const TextStyle(fontSize: 36),
+                  ),
+                );
+              },
+            ),
+            if (widget.pet.mood != PetMood.neutral)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: Text(
+                  _getMoodEmoji(),
+                  style: const TextStyle(fontSize: 14),
                 ),
               ),
-            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Pet Name
+        Text(
+          widget.pet.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: AppColors.lightText,
           ),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value / 100,
-              minHeight: 6,
-              backgroundColor: color.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+        ),
+        const SizedBox(height: 16),
+
+        // Animated Pet
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _bounceAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, -_bounceAnimation.value),
+                  child: Text(
+                    _getPetEmoji(),
+                    style: const TextStyle(fontSize: 64),
+                  ),
+                );
+              },
             ),
-          ),
-        ],
-      ),
+            // Mood bubble
+            if (widget.pet.mood != PetMood.neutral)
+              Positioned(
+                right: -10,
+                top: -10,
+                child: AnimatedBuilder(
+                  animation: _bounceAnimation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _bounceAnimation.value),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          _getMoodEmoji(),
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

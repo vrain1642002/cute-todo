@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/todo_model.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/localization_service.dart';
 import '../core/constants/colors.dart';
 import 'kanban_column.dart';
 
@@ -78,7 +79,7 @@ class KanbanBoard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               KanbanColumn(
-                title: 'To Do',
+                title: context.read<LocalizationService>().translate('todo'),
                 emoji: '📋',
                 status: TodoStatus.todo,
                 todos: todoTasks,
@@ -92,7 +93,9 @@ class KanbanBoard extends StatelessWidget {
                 onDragEnd: onDragEnd,
               ),
               KanbanColumn(
-                title: 'In Progress',
+                title: context
+                    .read<LocalizationService>()
+                    .translate('in_progress'),
                 emoji: '🚀',
                 status: TodoStatus.inProgress,
                 todos: inProgressTasks,
@@ -106,7 +109,7 @@ class KanbanBoard extends StatelessWidget {
                 onDragEnd: onDragEnd,
               ),
               KanbanColumn(
-                title: 'Done',
+                title: context.read<LocalizationService>().translate('done'),
                 emoji: '✅',
                 status: TodoStatus.completed,
                 todos: doneTasks,

@@ -62,11 +62,11 @@ class SettingsDialog extends StatelessWidget {
             const Divider(height: 32),
 
             // Language Section
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Language',
-                style: TextStyle(
+                loc.translate('language'),
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey,
@@ -81,7 +81,7 @@ class SettingsDialog extends StatelessWidget {
                     context,
                     loc,
                     code: 'en',
-                    flag: '�E�E',
+                    flag: '🇺🇸',
                     label: 'English',
                   ),
                 ),
@@ -91,7 +91,7 @@ class SettingsDialog extends StatelessWidget {
                     context,
                     loc,
                     code: 'vi',
-                    flag: '�E�E',
+                    flag: '🇻🇳',
                     label: 'Tiếng Việt',
                   ),
                 ),

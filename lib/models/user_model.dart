@@ -9,10 +9,6 @@ enum PetMood { happy, neutral, sad, sleeping }
 class PetModel {
   final PetType type;
   final String name;
-  final int health; // 0-100
-  final int happiness; // 0-100
-  final int level;
-  final int xp;
   final DateTime lastFed;
 
   final PetStage stage;
@@ -22,10 +18,6 @@ class PetModel {
   PetModel({
     this.type = PetType.cat,
     this.name = 'Mochi',
-    this.health = 100,
-    this.happiness = 100,
-    this.level = 1,
-    this.xp = 0,
     required this.lastFed,
     this.stage = PetStage.baby,
     this.variant = 0,
@@ -33,9 +25,7 @@ class PetModel {
   });
 
   PetMood get mood {
-    if (health < 30) return PetMood.sad;
-    if (happiness > 80) return PetMood.happy;
-    return PetMood.neutral;
+    return PetMood.happy;
   }
 
   factory PetModel.fromMap(Map<String, dynamic> map) {
@@ -45,10 +35,6 @@ class PetModel {
         orElse: () => PetType.cat,
       ),
       name: map['name'] ?? 'Mochi',
-      health: map['health'] ?? 100,
-      happiness: map['happiness'] ?? 100,
-      level: map['level'] ?? 1,
-      xp: map['xp'] ?? 0,
       lastFed: (map['lastFed'] as Timestamp).toDate(),
       stage: PetStage.values.firstWhere(
         (e) => e.name == map['stage'],
@@ -63,10 +49,6 @@ class PetModel {
     return {
       'type': type.name,
       'name': name,
-      'health': health,
-      'happiness': happiness,
-      'level': level,
-      'xp': xp,
       'lastFed': Timestamp.fromDate(lastFed),
       'stage': stage.name,
       'variant': variant,
@@ -77,10 +59,6 @@ class PetModel {
   PetModel copyWith({
     PetType? type,
     String? name,
-    int? health,
-    int? happiness,
-    int? level,
-    int? xp,
     DateTime? lastFed,
     PetStage? stage,
     int? variant,
@@ -89,10 +67,6 @@ class PetModel {
     return PetModel(
       type: type ?? this.type,
       name: name ?? this.name,
-      health: health ?? this.health,
-      happiness: happiness ?? this.happiness,
-      level: level ?? this.level,
-      xp: xp ?? this.xp,
       lastFed: lastFed ?? this.lastFed,
       stage: stage ?? this.stage,
       variant: variant ?? this.variant,

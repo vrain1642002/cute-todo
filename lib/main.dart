@@ -8,6 +8,7 @@ import 'services/theme_service.dart';
 import 'services/voice_service.dart';
 import 'services/localization_service.dart';
 import 'screens/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,10 +75,12 @@ class CuteTodoApp extends StatelessWidget {
                     ? Brightness.dark
                     : Brightness.light,
               ),
-              textTheme: TextTheme(
-                bodyLarge: TextStyle(color: palette.text),
-                bodyMedium: TextStyle(color: palette.text),
-                titleLarge: TextStyle(color: palette.text),
+              textTheme: GoogleFonts.quicksandTextTheme(
+                TextTheme(
+                  bodyLarge: TextStyle(color: palette.text),
+                  bodyMedium: TextStyle(color: palette.text),
+                  titleLarge: TextStyle(color: palette.text),
+                ),
               ),
             ),
             home: const SplashScreen(),

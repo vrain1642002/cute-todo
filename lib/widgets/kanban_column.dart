@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import '../models/todo_model.dart';
 import '../core/constants/colors.dart';
+import '../services/localization_service.dart';
+import 'package:provider/provider.dart';
 import 'kanban_task_card.dart';
 
 class KanbanColumn extends StatelessWidget {
@@ -56,21 +58,24 @@ class KanbanColumn extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(context),
           Expanded(
-            child: _buildDragTarget(),
+            child: _buildDragTarget(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [headerColor.withValues(alpha: 0.2), headerColor.withValues(alpha: 0.05)],
+          colors: [
+            headerColor.withValues(alpha: 0.2),
+            headerColor.withValues(alpha: 0.05)
+          ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -117,7 +122,7 @@ class KanbanColumn extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${todos.length} ${todos.length == 1 ? 'task' : 'tasks'}',
+                  '${todos.length} ${context.read<LocalizationService>().translate(todos.length == 1 ? 'task' : 'tasks')}',
                   style: TextStyle(
                     fontSize: 12,
                     color: headerColor.withValues(alpha: 0.7),
@@ -146,7 +151,7 @@ class KanbanColumn extends StatelessWidget {
     );
   }
 
-  Widget _buildDragTarget() {
+  Widget _buildDragTarget(BuildContext context) {
     return DragTarget<TodoModel>(
       onWillAcceptWithDetails: (details) => true,
       onAcceptWithDetails: (details) {
@@ -163,19 +168,18 @@ class KanbanColumn extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color:
-                isHovering ? headerColor.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius:
+                isHovering ? headerColor.withValues(alpha: 0.1) : Colors.transparent,            borderRadius:
                 const BorderRadius.vertical(bottom: Radius.circular(18)),
           ),
           child: todos.isEmpty
-              ? _buildEmptyState(isHovering)
+              ? _buildEmptyState(context, isHovering)
               : _buildTaskList(isHovering),
         );
       },
     );
   }
 
-  Widget _buildEmptyState(bool isHovering) {
+  Widget _buildEmptyState(BuildContext context, bool isHovering) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -191,7 +195,9 @@ class KanbanColumn extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              isHovering ? 'Drop here!' : 'No tasks yet',
+              isHovering
+                  ? context.read<LocalizationService>().translate('drop_here')
+                  : context.read<LocalizationService>().translate('no_tasks'),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -202,7 +208,7 @@ class KanbanColumn extends StatelessWidget {
             ),
             if (!isHovering)
               Text(
-                kIsWeb ? 'Drag tasks here' : 'Hold & drag tasks here',
+                context.read<LocalizationService>().translate('drag_to_move'),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.lightTextSecondary.withValues(alpha: 0.4),

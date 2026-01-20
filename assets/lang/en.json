@@ -20,5 +20,13 @@
     "finished": "Finished",
     "settings": "Settings",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "task": "task",
+    "tasks": "tasks",
+    "no_tasks": "No tasks yet",
+    "drop_here": "Drop here!",
+    "drag_to_move": "Hold & drag tasks here",
+    "great_job": "Great job!",
+    "pet_evolved": "Your pet evolved! ✨",
+    "adopt": "Adopt"
 }

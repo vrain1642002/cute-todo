@@ -20,5 +20,13 @@
     "finished": "Đã xong",
     "settings": "Cài đặt",
     "language": "Ngôn ngữ",
-    "theme": "Giao diện"
+    "theme": "Giao diện",
+    "task": "công việc",
+    "tasks": "công việc",
+    "no_tasks": "Chưa có công việc",
+    "drop_here": "Thả tại đây!",
+    "drag_to_move": "Nhấn giữ và kéo để thả",
+    "great_job": "Tuyệt vời!",
+    "pet_evolved": "Thú cưng đã tiến hóa! ✨",
+    "adopt": "Nhận nuôi"
 }

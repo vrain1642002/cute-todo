@@ -17,6 +17,8 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  double _progress = 0.0;
+  Timer? _progressTimer;
 
   @override
   void initState() {
@@ -36,8 +38,22 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-
+    _startLoadingProgress();
     _checkAuthStatus();
+  }
+
+  void _startLoadingProgress() {
+    const totalSteps = 100;
+    const stepDuration = Duration(milliseconds: 20);
+
+    _progressTimer = Timer.periodic(stepDuration, (timer) {
+      setState(() {
+        _progress = (timer.tick / totalSteps).clamp(0.0, 1.0);
+      });
+      if (timer.tick >= totalSteps) {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> _checkAuthStatus() async {
@@ -59,6 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _progressTimer?.cancel();
     super.dispose();
   }
 
@@ -118,15 +135,40 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: const Text(
-                  'Make productivity fun! ✨',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+              const SizedBox(height: 48),
+              // Progress Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 60),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: _progress,
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.white),
+                        minHeight: 6,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${(_progress * 100).toInt()}%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _progress < 1.0 ? 'Loading resources...' : 'Ready!',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
