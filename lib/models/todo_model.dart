@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum TodoPriority { low, medium, high }
 
-enum TodoStatus { pending, completed }
+enum TodoStatus { todo, inProgress, completed }
 
 class TodoModel {
   final String id;
@@ -16,6 +16,7 @@ class TodoModel {
   final List<String> tags;
   final List<Subtask> subtasks;
   final int xpReward;
+  final int orderIndex;
   final DateTime? completedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -28,10 +29,11 @@ class TodoModel {
     this.category = 'General',
     this.priority = TodoPriority.medium,
     this.dueDate,
-    this.status = TodoStatus.pending,
+    this.status = TodoStatus.todo,
     this.tags = const [],
     this.subtasks = const [],
     int? xpReward,
+    this.orderIndex = 0,
     this.completedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -53,6 +55,11 @@ class TodoModel {
   // Convert from Firestore
   factory TodoModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Handle legacy 'pending' status mapping to 'todo'
+    String statusStr = data['status'] ?? 'todo';
+    if (statusStr == 'pending') statusStr = 'todo';
+
     return TodoModel(
       id: doc.id,
       userId: data['userId'] ?? '',
@@ -67,8 +74,8 @@ class TodoModel {
           ? (data['dueDate'] as Timestamp).toDate()
           : null,
       status: TodoStatus.values.firstWhere(
-        (e) => e.name == data['status'],
-        orElse: () => TodoStatus.pending,
+        (e) => e.name == statusStr,
+        orElse: () => TodoStatus.todo,
       ),
       tags: List<String>.from(data['tags'] ?? []),
       subtasks: (data['subtasks'] as List<dynamic>?)
@@ -76,11 +83,16 @@ class TodoModel {
               .toList() ??
           [],
       xpReward: data['xpReward'] ?? 25,
+      orderIndex: data['orderIndex'] ?? 0,
       completedAt: data['completedAt'] != null
           ? (data['completedAt'] as Timestamp).toDate()
           : null,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : DateTime.now(),
     );
   }
 
@@ -97,6 +109,7 @@ class TodoModel {
       'tags': tags,
       'subtasks': subtasks.map((e) => e.toMap()).toList(),
       'xpReward': xpReward,
+      'orderIndex': orderIndex,
       'completedAt':
           completedAt != null ? Timestamp.fromDate(completedAt!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -130,6 +143,7 @@ class TodoModel {
     List<String>? tags,
     List<Subtask>? subtasks,
     int? xpReward,
+    int? orderIndex,
     DateTime? completedAt,
     bool clearCompletedAt = false,
     DateTime? createdAt,
@@ -147,6 +161,7 @@ class TodoModel {
       tags: tags ?? this.tags,
       subtasks: subtasks ?? this.subtasks,
       xpReward: xpReward ?? this.xpReward,
+      orderIndex: orderIndex ?? this.orderIndex,
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),

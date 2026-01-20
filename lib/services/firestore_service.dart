@@ -41,20 +41,75 @@ class FirestoreService {
     }
   }
 
-  // Get user todos stream
-  Stream<List<TodoModel>> getUserTodos(String userId, {TodoStatus? status}) {
-    Query query = _firestore
+  // Get all user todos stream (for Kanban board)
+  Stream<List<TodoModel>> getAllUserTodos(String userId) {
+    return _firestore
         .collection('todos')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true);
+        .orderBy('orderIndex', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => TodoModel.fromFirestore(doc)).toList();
+    });
+  }
+
+  // Get user todos stream by status
+  Stream<List<TodoModel>> getUserTodos(String userId, {TodoStatus? status}) {
+    Query query =
+        _firestore.collection('todos').where('userId', isEqualTo: userId);
 
     if (status != null) {
       query = query.where('status', isEqualTo: status.name);
     }
 
+    query = query.orderBy('orderIndex', descending: false);
+
     return query.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => TodoModel.fromFirestore(doc)).toList();
     });
+  }
+
+  // Update todo status (for drag-drop)
+  Future<void> updateTodoStatus(
+      String todoId, TodoStatus newStatus, int newOrderIndex) async {
+    try {
+      final updates = <String, dynamic>{
+        'status': newStatus.name,
+        'orderIndex': newOrderIndex,
+        'updatedAt': Timestamp.now(),
+      };
+
+      if (newStatus == TodoStatus.completed) {
+        updates['completedAt'] = Timestamp.now();
+      } else {
+        updates['completedAt'] = null;
+      }
+
+      await _firestore.collection('todos').doc(todoId).update(updates);
+    } catch (e) {
+      print('Error updating todo status: $e');
+      rethrow;
+    }
+  }
+
+  // Batch update todo orders (for reordering within column)
+  Future<void> batchUpdateTodoOrders(List<TodoModel> todos) async {
+    try {
+      final batch = _firestore.batch();
+
+      for (int i = 0; i < todos.length; i++) {
+        final docRef = _firestore.collection('todos').doc(todos[i].id);
+        batch.update(docRef, {
+          'orderIndex': i,
+          'updatedAt': Timestamp.now(),
+        });
+      }
+
+      await batch.commit();
+    } catch (e) {
+      print('Error batch updating todo orders: $e');
+      rethrow;
+    }
   }
 
   // Get todos by category
@@ -63,7 +118,7 @@ class FirestoreService {
         .collection('todos')
         .where('userId', isEqualTo: userId)
         .where('category', isEqualTo: category)
-        .orderBy('createdAt', descending: true)
+        .orderBy('orderIndex', descending: false)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => TodoModel.fromFirestore(doc)).toList();
@@ -79,7 +134,7 @@ class FirestoreService {
     return _firestore
         .collection('todos')
         .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: TodoStatus.pending.name)
+        .where('status', isEqualTo: TodoStatus.todo.name)
         .where('dueDate',
             isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
         .where('dueDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
@@ -96,7 +151,7 @@ class FirestoreService {
     return _firestore
         .collection('todos')
         .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: TodoStatus.pending.name)
+        .where('status', isEqualTo: TodoStatus.todo.name)
         .where('dueDate', isLessThan: Timestamp.fromDate(now))
         .snapshots()
         .map((snapshot) {
@@ -104,7 +159,7 @@ class FirestoreService {
     });
   }
 
-  // Toggle todo status
+  // Toggle todo status (legacy support)
   Future<void> toggleTodoStatus(String todoId, TodoStatus newStatus) async {
     try {
       final updates = <String, dynamic>{
@@ -145,20 +200,32 @@ class FirestoreService {
           .where('status', isEqualTo: TodoStatus.completed.name)
           .get();
 
-      final totalPending = await _firestore
+      final totalTodo = await _firestore
           .collection('todos')
           .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: TodoStatus.pending.name)
+          .where('status', isEqualTo: TodoStatus.todo.name)
+          .get();
+
+      final totalInProgress = await _firestore
+          .collection('todos')
+          .where('userId', isEqualTo: userId)
+          .where('status', isEqualTo: TodoStatus.inProgress.name)
           .get();
 
       return {
         'completedToday': completedToday.docs.length,
         'totalCompleted': totalCompleted.docs.length,
-        'totalPending': totalPending.docs.length,
+        'totalTodo': totalTodo.docs.length,
+        'totalInProgress': totalInProgress.docs.length,
       };
     } catch (e) {
       print('Error getting completion stats: $e');
-      return {'completedToday': 0, 'totalCompleted': 0, 'totalPending': 0};
+      return {
+        'completedToday': 0,
+        'totalCompleted': 0,
+        'totalTodo': 0,
+        'totalInProgress': 0
+      };
     }
   }
 
