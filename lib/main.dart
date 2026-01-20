@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'core/constants/themes.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
+import 'services/theme_service.dart';
+import 'services/voice_service.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -34,14 +35,42 @@ class CuteTodoApp extends StatelessWidget {
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
+        ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
+        ChangeNotifierProvider<VoiceService>(create: (_) => VoiceService()),
       ],
-      child: MaterialApp(
-        title: 'Cute Todo',
-        debugShowCheckedModeBanner: false,
-        theme: AppThemes.lightTheme,
-        darkTheme: AppThemes.darkTheme,
-        themeMode: ThemeMode.light,
-        home: const SplashScreen(),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, child) {
+          final palette = themeService.currentPalette;
+
+          return MaterialApp(
+            title: 'Cute Todo',
+            debugShowCheckedModeBanner: false,
+            // Dynamically build theme from current palette
+            theme: ThemeData(
+              useMaterial3: true,
+              primaryColor: palette.primary,
+              scaffoldBackgroundColor: palette.background,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: palette.primary,
+                primary: palette.primary,
+                secondary: palette.secondary,
+                surface: palette.surface,
+                background: palette.background,
+                onBackground: palette.text,
+                onSurface: palette.text,
+                brightness: themeService.currentMode == AppThemeMode.night
+                    ? Brightness.dark
+                    : Brightness.light,
+              ),
+              textTheme: TextTheme(
+                bodyLarge: TextStyle(color: palette.text),
+                bodyMedium: TextStyle(color: palette.text),
+                titleLarge: TextStyle(color: palette.text),
+              ),
+            ),
+            home: const SplashScreen(),
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,82 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum PetType { cat, dog, bunny, plant }
+
+enum PetMood { happy, neutral, sad, sleeping }
+
+class PetModel {
+  final PetType type;
+  final String name;
+  final int health; // 0-100
+  final int happiness; // 0-100
+  final int level;
+  final int xp;
+  final DateTime lastFed;
+
+  PetModel({
+    this.type = PetType.cat,
+    this.name = 'Mochi',
+    this.health = 100,
+    this.happiness = 100,
+    this.level = 1,
+    this.xp = 0,
+    required this.lastFed,
+  });
+
+  PetMood get mood {
+    if (health < 30) return PetMood.sad;
+    if (happiness > 80) return PetMood.happy;
+    return PetMood.neutral;
+  }
+
+  factory PetModel.fromMap(Map<String, dynamic> map) {
+    return PetModel(
+      type: PetType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => PetType.cat,
+      ),
+      name: map['name'] ?? 'Mochi',
+      health: map['health'] ?? 100,
+      happiness: map['happiness'] ?? 100,
+      level: map['level'] ?? 1,
+      xp: map['xp'] ?? 0,
+      lastFed: (map['lastFed'] as Timestamp).toDate(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type.name,
+      'name': name,
+      'health': health,
+      'happiness': happiness,
+      'level': level,
+      'xp': xp,
+      'lastFed': Timestamp.fromDate(lastFed),
+    };
+  }
+
+  PetModel copyWith({
+    PetType? type,
+    String? name,
+    int? health,
+    int? happiness,
+    int? level,
+    int? xp,
+    DateTime? lastFed,
+  }) {
+    return PetModel(
+      type: type ?? this.type,
+      name: name ?? this.name,
+      health: health ?? this.health,
+      happiness: happiness ?? this.happiness,
+      level: level ?? this.level,
+      xp: xp ?? this.xp,
+      lastFed: lastFed ?? this.lastFed,
+    );
+  }
+}
+
 class UserModel {
   final String uid;
   final String email;
@@ -10,6 +87,7 @@ class UserModel {
   final int streak;
   final DateTime createdAt;
   final UserSettings settings;
+  final PetModel? pet;
 
   UserModel({
     required this.uid,
@@ -21,6 +99,7 @@ class UserModel {
     this.streak = 0,
     required this.createdAt,
     UserSettings? settings,
+    this.pet,
   }) : settings = settings ?? UserSettings();
 
   // Convert from Firestore
@@ -38,6 +117,7 @@ class UserModel {
       settings: data['settings'] != null
           ? UserSettings.fromMap(data['settings'])
           : UserSettings(),
+      pet: data['pet'] != null ? PetModel.fromMap(data['pet']) : null,
     );
   }
 
@@ -52,6 +132,7 @@ class UserModel {
       'streak': streak,
       'createdAt': Timestamp.fromDate(createdAt),
       'settings': settings.toMap(),
+      'pet': pet?.toMap(),
     };
   }
 
@@ -71,6 +152,7 @@ class UserModel {
     int? streak,
     DateTime? createdAt,
     UserSettings? settings,
+    PetModel? pet,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -82,6 +164,7 @@ class UserModel {
       streak: streak ?? this.streak,
       createdAt: createdAt ?? this.createdAt,
       settings: settings ?? this.settings,
+      pet: pet ?? this.pet,
     );
   }
 }

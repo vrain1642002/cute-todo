@@ -2,12 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart'; // Add import
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/theme_service.dart';
 import '../models/user_model.dart';
 import '../models/todo_model.dart';
 import '../core/constants/colors.dart';
 import '../widgets/kanban_column.dart';
+import '../widgets/pet_widget.dart'; // Add import
+import '../services/voice_service.dart'; // Add import
 import 'login_screen.dart';
 
 class KanbanBoardScreen extends StatefulWidget {
@@ -117,17 +121,31 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
     }
   }
 
-  void _showAddTodoDialog() {
+  void _showAddTodoDialog({String? initialTitle}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _AddTaskBottomSheet(
+        initialTitle: initialTitle,
         onTaskAdded: () {
           setState(() {});
         },
       ),
     );
+  }
+
+  void _showVoiceDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const _VoiceListeningDialog(),
+    ).then((result) {
+      if (result != null && result is String && result.isNotEmpty) {
+        // Open Add Task dialog with transcribed text
+        _showAddTodoDialog(initialTitle: result);
+      }
+    });
   }
 
   Future<void> _handleTodoDropped(
@@ -221,33 +239,61 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
       return const LoginScreen();
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildXpBar(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _buildKanbanBoard(),
+    return Consumer<ThemeService>(
+      builder: (context, themeService, child) {
+        final palette = themeService.currentPalette;
+
+        return Scaffold(
+          extendBodyBehindAppBar: true,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: palette.backgroundGradient,
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddTodoDialog,
-        backgroundColor: AppColors.lightPrimary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Add Task',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(palette),
+
+                  _buildXpBar(),
+                  const SizedBox(height: 16),
+                  _buildPetArea(), // Add Pet Area
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: _buildKanbanBoard(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          floatingActionButton: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                heroTag: 'voice_btn',
+                onPressed: _showVoiceDialog,
+                backgroundColor: palette.secondary,
+                child: const Icon(Icons.mic_rounded, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton.extended(
+                heroTag: 'add_btn',
+                onPressed: _showAddTodoDialog,
+                backgroundColor: palette.primary,
+                icon: Icon(Icons.add_rounded, color: palette.surface),
+                label: Text(
+                  'Add Task',
+                  style: TextStyle(
+                      color: palette.surface, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ThemePalette palette) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -255,10 +301,10 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.lightPrimary, width: 3),
+              border: Border.all(color: palette.primary, width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.lightPrimary.withOpacity(0.3),
+                  color: palette.primary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -269,14 +315,14 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
               backgroundImage: _currentUser!.photoURL != null
                   ? NetworkImage(_currentUser!.photoURL!)
                   : null,
-              backgroundColor: AppColors.lightPrimary.withOpacity(0.2),
+              backgroundColor: palette.primary.withOpacity(0.2),
               child: _currentUser!.photoURL == null
                   ? Text(
                       _currentUser!.displayName[0].toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.lightPrimary,
+                        color: palette.primary,
                       ),
                     )
                   : null,
@@ -289,10 +335,10 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
               children: [
                 Text(
                   'Hello, ${_currentUser!.displayName.split(' ').first}! 👋',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.lightText,
+                    color: palette.text,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -301,13 +347,14 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
                     _buildStatChip(
                       icon: Icons.stars_rounded,
                       label: 'Level ${_currentUser!.level}',
-                      color: AppColors.lightSecondary,
+                      color: palette.secondary,
                     ),
                     const SizedBox(width: 10),
                     _buildStatChip(
                       icon: Icons.local_fire_department_rounded,
                       label: '${_currentUser!.streak} days',
-                      color: AppColors.error,
+                      color: AppColors
+                          .error, // Keep red for streak regardless of theme
                     ),
                   ],
                 ),
@@ -318,7 +365,7 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
             onPressed: _handleSignOut,
             icon: const Icon(Icons.logout_rounded),
             style: IconButton.styleFrom(
-              backgroundColor: AppColors.lightSurface,
+              backgroundColor: palette.surface,
               padding: const EdgeInsets.all(12),
             ),
           ),
@@ -426,6 +473,74 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
     );
   }
 
+  Widget _buildPetArea() {
+    if (_currentUser == null) return const SizedBox.shrink();
+
+    // If user has no pet, show Adopt button
+    if (_currentUser!.pet == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: GestureDetector(
+          onTap: _adoptPet,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.lightPrimary, width: 2),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('🥚', style: TextStyle(fontSize: 24)),
+                SizedBox(width: 12),
+                Text(
+                  'Adopt a Pet Companion!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lightPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Show Pet Widget
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: PetWidget(
+        pet: _currentUser!.pet!,
+        onPetTap: () {
+          // TODO: Implement feeding/interaction
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pet patted! ❤️')),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _adoptPet() async {
+    if (_currentUser == null) return;
+
+    final newPet = PetModel(
+      type: PetType.cat, // Default to Cat for now
+      name: 'Mochi',
+      lastFed: DateTime.now(),
+    );
+
+    final updatedUser = _currentUser!.copyWith(pet: newPet);
+
+    // Optimistic update
+    setState(() => _currentUser = updatedUser);
+
+    final authService = context.read<AuthService>();
+    await authService.updateUserData(updatedUser);
+  }
+
   Widget _buildKanbanBoard() {
     final authService = context.read<AuthService>();
     final firestoreService = context.read<FirestoreService>();
@@ -531,17 +646,31 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
 // Add Task Bottom Sheet
 class _AddTaskBottomSheet extends StatefulWidget {
   final VoidCallback onTaskAdded;
+  final String? initialTitle;
 
-  const _AddTaskBottomSheet({required this.onTaskAdded});
+  const _AddTaskBottomSheet({
+    required this.onTaskAdded,
+    this.initialTitle,
+  });
 
   @override
   State<_AddTaskBottomSheet> createState() => _AddTaskBottomSheetState();
 }
 
 class _AddTaskBottomSheetState extends State<_AddTaskBottomSheet> {
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _titleController;
+  final _descriptionController =
+      TextEditingController(); // Keep description empty initially
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle);
+  }
+
   TodoPriority _priority = TodoPriority.medium;
+  EnergyLevel _energyLevel = EnergyLevel.any;
+  TaskCategory _category = TaskCategory.general;
   DateTime? _dueDate;
   bool _isLoading = false;
 
@@ -600,6 +729,8 @@ class _AddTaskBottomSheetState extends State<_AddTaskBottomSheet> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       priority: _priority,
+      energyLevel: _energyLevel,
+      category: _category,
       dueDate: _dueDate,
       status: TodoStatus.todo,
     );
@@ -849,6 +980,166 @@ class _AddTaskBottomSheetState extends State<_AddTaskBottomSheet> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Energy Level selector 🎭
+            const Text(
+              'Energy Level 🎭',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: EnergyLevel.values.map((energy) {
+                final isSelected = _energyLevel == energy;
+                String emoji;
+                String label;
+                Color color;
+
+                switch (energy) {
+                  case EnergyLevel.any:
+                    emoji = '✨';
+                    label = 'Any';
+                    color = Colors.grey;
+                    break;
+                  case EnergyLevel.lowEnergy:
+                    emoji = '😴';
+                    label = 'Low Energy';
+                    color = Colors.blueGrey;
+                    break;
+                  case EnergyLevel.highFocus:
+                    emoji = '🎯';
+                    label = 'High Focus';
+                    color = Colors.red;
+                    break;
+                  case EnergyLevel.creative:
+                    emoji = '🌟';
+                    label = 'Creative';
+                    color = Colors.amber;
+                    break;
+                }
+
+                return GestureDetector(
+                  onTap: () => setState(() => _energyLevel = energy),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? color.withOpacity(0.15)
+                          : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? color : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(emoji, style: const TextStyle(fontSize: 16)),
+                        const SizedBox(width: 6),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? color
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // Category selector 📁
+            const Text(
+              'Category 📁',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<TaskCategory>(
+                  value: _category,
+                  isExpanded: true,
+                  icon: const Icon(Icons.arrow_drop_down_rounded),
+                  items: TaskCategory.values.map((cat) {
+                    String emoji;
+                    String label;
+
+                    switch (cat) {
+                      case TaskCategory.general:
+                        emoji = '📁';
+                        label = 'General';
+                        break;
+                      case TaskCategory.study:
+                        emoji = '📚';
+                        label = 'Study';
+                        break;
+                      case TaskCategory.exercise:
+                        emoji = '💪';
+                        label = 'Exercise';
+                        break;
+                      case TaskCategory.housework:
+                        emoji = '🧹';
+                        label = 'Housework';
+                        break;
+                      case TaskCategory.creative:
+                        emoji = '🎨';
+                        label = 'Creative';
+                        break;
+                      case TaskCategory.social:
+                        emoji = '💬';
+                        label = 'Social';
+                        break;
+                      case TaskCategory.work:
+                        emoji = '💼';
+                        label = 'Work';
+                        break;
+                      case TaskCategory.selfCare:
+                        emoji = '💆';
+                        label = 'Self Care';
+                        break;
+                    }
+
+                    return DropdownMenuItem(
+                      value: cat,
+                      child: Row(
+                        children: [
+                          Text(emoji, style: const TextStyle(fontSize: 18)),
+                          const SizedBox(width: 10),
+                          Text(label),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _category = value);
+                    }
+                  },
+                ),
+              ),
+            ),
             const SizedBox(height: 28),
 
             // Create button
@@ -895,6 +1186,120 @@ class _AddTaskBottomSheetState extends State<_AddTaskBottomSheet> {
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Voice Listening Dialog
+class _VoiceListeningDialog extends StatefulWidget {
+  const _VoiceListeningDialog();
+
+  @override
+  State<_VoiceListeningDialog> createState() => _VoiceListeningDialogState();
+}
+
+class _VoiceListeningDialogState extends State<_VoiceListeningDialog> {
+  String _text = 'Say something...';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startListening();
+    });
+  }
+
+  Future<void> _startListening() async {
+    final voiceService = context.read<VoiceService>();
+    await voiceService.startListening(onResult: (text) {
+      if (mounted) {
+        setState(() => _text = text);
+      }
+    });
+  }
+
+  void _finish() {
+    final voiceService = context.read<VoiceService>();
+    voiceService.stopListening();
+    Navigator.of(context).pop(_text == 'Say something...' ? null : _text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Watch voice service to rebuild on state changes
+    final voiceService = context.watch<VoiceService>();
+    final isListening = voiceService.isListening;
+
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 10),
+          Icon(
+            isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+            size: 48,
+            color: isListening ? AppColors.lightPrimary : Colors.grey,
+          )
+              .animate(target: isListening ? 1 : 0)
+              .scale(
+                duration: 400.ms,
+                begin: const Offset(1, 1),
+                end: const Offset(1.2, 1.2),
+              )
+              .then()
+              .scale(
+                duration: 400.ms,
+                begin: const Offset(1.2, 1.2),
+                end: const Offset(1, 1),
+              ),
+          const SizedBox(height: 20),
+          Text(
+            isListening ? 'Listening...' : 'Finished',
+            style: TextStyle(
+              color: isListening ? AppColors.lightPrimary : Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
+          if (isListening)
+            ElevatedButton(
+              onPressed: _finish,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.lightPrimary,
+                shape: const StadiumBorder(),
+              ),
+              child: const Text('Done', style: TextStyle(color: Colors.white)),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, _text),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('Create Task',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

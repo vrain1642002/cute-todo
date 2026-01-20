@@ -104,14 +104,18 @@ class KanbanTaskCard extends StatelessWidget {
 
                 const SizedBox(height: 12),
 
-                // Bottom row with due date and category
+                // Bottom row with due date, category and energy
                 Row(
                   children: [
                     if (todo.dueDate != null) ...[
                       _buildDueDateChip(),
                       const SizedBox(width: 8),
                     ],
-                    if (todo.category != 'General') _buildCategoryChip(),
+                    if (todo.category != TaskCategory.general) ...[
+                      _buildCategoryChip(),
+                      const SizedBox(width: 8),
+                    ],
+                    if (todo.energyLevel != EnergyLevel.any) _buildEnergyChip(),
                   ],
                 ),
               ],
@@ -230,31 +234,93 @@ class KanbanTaskCard extends StatelessWidget {
   }
 
   Widget _buildCategoryChip() {
+    final categoryInfo = _getCategoryInfo(todo.category);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.lightAccent.withOpacity(0.1),
+        color: categoryInfo.color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.folder_rounded,
-            size: 14,
-            color: AppColors.lightAccent,
-          ),
+          Text(categoryInfo.emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Text(
-            todo.category,
-            style: const TextStyle(
+            categoryInfo.label,
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.lightAccent,
+              color: categoryInfo.color,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildEnergyChip() {
+    final energyInfo = _getEnergyInfo(todo.energyLevel);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: energyInfo.color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: energyInfo.color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(energyInfo.emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(
+            energyInfo.label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: energyInfo.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ({String emoji, String label, Color color}) _getCategoryInfo(
+      TaskCategory category) {
+    switch (category) {
+      case TaskCategory.study:
+        return (emoji: '📚', label: 'Study', color: Colors.blue);
+      case TaskCategory.exercise:
+        return (emoji: '💪', label: 'Exercise', color: Colors.orange);
+      case TaskCategory.housework:
+        return (emoji: '🧹', label: 'Housework', color: Colors.green);
+      case TaskCategory.creative:
+        return (emoji: '🎨', label: 'Creative', color: Colors.purple);
+      case TaskCategory.social:
+        return (emoji: '💬', label: 'Social', color: Colors.pink);
+      case TaskCategory.work:
+        return (emoji: '💼', label: 'Work', color: Colors.indigo);
+      case TaskCategory.selfCare:
+        return (emoji: '💆', label: 'Self Care', color: Colors.teal);
+      case TaskCategory.general:
+        return (emoji: '📁', label: 'General', color: AppColors.lightAccent);
+    }
+  }
+
+  ({String emoji, String label, Color color}) _getEnergyInfo(
+      EnergyLevel energy) {
+    switch (energy) {
+      case EnergyLevel.lowEnergy:
+        return (emoji: '😴', label: 'Low Energy', color: Colors.blueGrey);
+      case EnergyLevel.highFocus:
+        return (emoji: '🎯', label: 'Focus', color: Colors.red);
+      case EnergyLevel.creative:
+        return (emoji: '🌟', label: 'Creative', color: Colors.amber);
+      case EnergyLevel.any:
+        return (emoji: '✨', label: 'Any', color: Colors.grey);
+    }
   }
 }
