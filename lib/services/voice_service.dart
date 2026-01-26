@@ -84,18 +84,25 @@ class VoiceService extends ChangeNotifier {
     // For now, return full text as title to avoid over-cleaning
     String title = text;
 
-    return TaskDraft(title: title, priority: priority, dueDate: dueDate);
+    return TaskDraft(
+      title: title,
+      priority: priority,
+      dueDate: dueDate,
+      category: TaskCategory.other,
+    );
   }
 }
 
 class TaskDraft {
   final String title;
   final TodoPriority priority;
+  final TaskCategory category;
   final DateTime? dueDate;
 
   TaskDraft({
     required this.title,
     required this.priority,
+    this.category = TaskCategory.other,
     this.dueDate,
   });
 }

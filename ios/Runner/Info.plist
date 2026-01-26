@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Speech Recognition Permissions -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to the microphone to create tasks using voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to convert your voice into task titles.</string>
 </dict>
 </plist>

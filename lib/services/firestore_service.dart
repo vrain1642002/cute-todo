@@ -42,6 +42,20 @@ class FirestoreService {
     }
   }
 
+  // Get single todo
+  Future<TodoModel?> getTodo(String todoId) async {
+    try {
+      final doc = await _firestore.collection('todos').doc(todoId).get();
+      if (doc.exists) {
+        return TodoModel.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting todo: $e');
+      return null;
+    }
+  }
+
   // Get all user todos stream (for Kanban board)
   Stream<List<TodoModel>> getAllUserTodos(String userId) {
     return _firestore
@@ -233,13 +247,14 @@ class FirestoreService {
   // Get unique categories for user
   Future<List<String>> getUserCategories(String userId) async {
     try {
-      final snapshot = await _firestore
+      // Categories are stored in the todos themselves
+      final todosSnapshot = await _firestore
           .collection('todos')
           .where('userId', isEqualTo: userId)
           .get();
 
       final categories = <String>{};
-      for (final doc in snapshot.docs) {
+      for (final doc in todosSnapshot.docs) {
         final data = doc.data();
         if (data['category'] != null) {
           categories.add(data['category'] as String);

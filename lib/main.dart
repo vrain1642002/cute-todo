@@ -7,6 +7,8 @@ import 'services/firestore_service.dart';
 import 'services/theme_service.dart';
 import 'services/voice_service.dart';
 import 'services/localization_service.dart';
+import 'services/notification_service.dart';
+import 'services/ai_service.dart';
 import 'screens/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -26,11 +28,17 @@ void main() async {
     ),
   );
 
-  runApp(const CuteTodoApp());
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.init();
+
+  runApp(CuteTodoApp(notificationService: notificationService));
 }
 
 class CuteTodoApp extends StatelessWidget {
-  const CuteTodoApp({super.key});
+  final NotificationService notificationService;
+
+  const CuteTodoApp({super.key, required this.notificationService});
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +46,12 @@ class CuteTodoApp extends StatelessWidget {
       providers: [
         Provider<AuthService>(create: (_) => AuthService()),
         Provider<FirestoreService>(create: (_) => FirestoreService()),
+        Provider<NotificationService>.value(value: notificationService),
+        Provider<AiService>(create: (_) => AiService()),
         ChangeNotifierProvider<ThemeService>(create: (_) => ThemeService()),
         ChangeNotifierProvider<VoiceService>(create: (_) => VoiceService()),
         ChangeNotifierProvider<LocalizationService>(
-            create: (_) => LocalizationService()), // Add Provider
+            create: (_) => LocalizationService()),
       ],
       child: Consumer2<ThemeService, LocalizationService>(
         builder: (context, themeService, localizationService, child) {

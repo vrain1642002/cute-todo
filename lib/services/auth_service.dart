@@ -100,7 +100,25 @@ class AuthService {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
-        return UserModel.fromFirestore(doc);
+        final userModel = UserModel.fromFirestore(doc);
+
+        // Always sync photoURL and displayName from current auth user
+        final currentAuthUser = _auth.currentUser;
+        if (currentAuthUser != null && currentAuthUser.uid == uid) {
+          // Check if we need to update
+          if (userModel.photoURL != currentAuthUser.photoURL ||
+              userModel.displayName != currentAuthUser.displayName) {
+            final updatedModel = userModel.copyWith(
+              photoURL: currentAuthUser.photoURL,
+              displayName: currentAuthUser.displayName ?? userModel.displayName,
+            );
+            // Update Firestore in background
+            updateUserData(updatedModel);
+            return updatedModel;
+          }
+        }
+
+        return userModel;
       }
       return null;
     } catch (e) {

@@ -4,24 +4,13 @@ enum TodoPriority { low, medium, high }
 
 enum TodoStatus { todo, inProgress, completed }
 
-// Energy level for mood-based task filtering
-enum EnergyLevel {
-  any, // Default - no specific energy needed
-  lowEnergy, // Light tasks when tired
-  highFocus, // Deep work requiring concentration
-  creative, // Tasks needing inspiration
-}
-
 // Task categories for RPG stats
 enum TaskCategory {
-  general, // Default
-  study, // 📚 Intelligence
-  exercise, // 💪 Strength
-  housework, // 🧹 Diligence
-  creative, // 🎨 Creativity
-  social, // 💬 Charisma
-  work, // 💼 Career
-  selfCare, // 💆 Wellness
+  other, // 📦 Default/Other
+  study, // 📚 Learning
+  draw, // 🎨 Drawing/Creativity
+  code, // 💻 Coding/Work
+  game, // 🎮 Gaming/Leisure
 }
 
 class TodoModel {
@@ -31,7 +20,6 @@ class TodoModel {
   final String description;
   final TaskCategory category;
   final TodoPriority priority;
-  final EnergyLevel energyLevel;
   final DateTime? dueDate;
   final TodoStatus status;
   final List<String> tags;
@@ -44,15 +32,16 @@ class TodoModel {
   // Self-destructing task fields
   final bool autoDelete;
   final DateTime? expiresAt;
+  // Image attachments
+  final List<String> imageUrls;
 
   TodoModel({
     required this.id,
     required this.userId,
     required this.title,
     this.description = '',
-    this.category = TaskCategory.general,
+    this.category = TaskCategory.other,
     this.priority = TodoPriority.medium,
-    this.energyLevel = EnergyLevel.any,
     this.dueDate,
     this.status = TodoStatus.todo,
     this.tags = const [],
@@ -64,6 +53,7 @@ class TodoModel {
     DateTime? updatedAt,
     this.autoDelete = false,
     this.expiresAt,
+    this.imageUrls = const [],
   })  : xpReward = xpReward ?? _calculateXpReward(priority, category),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -84,14 +74,15 @@ class TodoModel {
 
     // Category Bonuses
     switch (category) {
-      case TaskCategory.work:
+      case TaskCategory.code:
       case TaskCategory.study:
-      case TaskCategory.exercise:
-        baseXp += 15; // Hard work bonus
+        baseXp += 15; // Mental work bonus
         break;
-      case TaskCategory.housework:
-      case TaskCategory.creative:
-        baseXp += 10; // Active bonus
+      case TaskCategory.draw:
+        baseXp += 10; // Creative bonus
+        break;
+      case TaskCategory.game:
+        baseXp += 5; // Fun task
         break;
       default:
         break;
@@ -115,15 +106,11 @@ class TodoModel {
       description: data['description'] ?? '',
       category: TaskCategory.values.firstWhere(
         (e) => e.name == data['category'],
-        orElse: () => TaskCategory.general,
+        orElse: () => TaskCategory.other,
       ),
       priority: TodoPriority.values.firstWhere(
         (e) => e.name == data['priority'],
         orElse: () => TodoPriority.medium,
-      ),
-      energyLevel: EnergyLevel.values.firstWhere(
-        (e) => e.name == data['energyLevel'],
-        orElse: () => EnergyLevel.any,
       ),
       dueDate: data['dueDate'] != null
           ? (data['dueDate'] as Timestamp).toDate()
@@ -152,6 +139,7 @@ class TodoModel {
       expiresAt: data['expiresAt'] != null
           ? (data['expiresAt'] as Timestamp).toDate()
           : null,
+      imageUrls: List<String>.from(data['imageUrls'] ?? []),
     );
   }
 
@@ -163,7 +151,6 @@ class TodoModel {
       'description': description,
       'category': category.name,
       'priority': priority.name,
-      'energyLevel': energyLevel.name,
       'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
       'status': status.name,
       'tags': tags,
@@ -176,6 +163,7 @@ class TodoModel {
       'updatedAt': Timestamp.fromDate(updatedAt),
       'autoDelete': autoDelete,
       'expiresAt': expiresAt != null ? Timestamp.fromDate(expiresAt!) : null,
+      'imageUrls': imageUrls,
     };
   }
 
@@ -199,7 +187,6 @@ class TodoModel {
     String? description,
     TaskCategory? category,
     TodoPriority? priority,
-    EnergyLevel? energyLevel,
     DateTime? dueDate,
     bool clearDueDate = false,
     TodoStatus? status,
@@ -214,6 +201,7 @@ class TodoModel {
     bool? autoDelete,
     DateTime? expiresAt,
     bool clearExpiresAt = false,
+    List<String>? imageUrls,
   }) {
     return TodoModel(
       id: id ?? this.id,
@@ -222,7 +210,6 @@ class TodoModel {
       description: description ?? this.description,
       category: category ?? this.category,
       priority: priority ?? this.priority,
-      energyLevel: energyLevel ?? this.energyLevel,
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       status: status ?? this.status,
       tags: tags ?? this.tags,
@@ -234,6 +221,7 @@ class TodoModel {
       updatedAt: updatedAt ?? DateTime.now(),
       autoDelete: autoDelete ?? this.autoDelete,
       expiresAt: clearExpiresAt ? null : (expiresAt ?? this.expiresAt),
+      imageUrls: imageUrls ?? this.imageUrls,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../services/voice_service.dart';
+import '../services/ai_service.dart';
 import '../core/constants/colors.dart';
 
 class VoiceListeningDialog extends StatefulWidget {
@@ -13,6 +14,7 @@ class VoiceListeningDialog extends StatefulWidget {
 
 class _VoiceListeningDialogState extends State<VoiceListeningDialog> {
   String _text = 'Say something...';
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -31,7 +33,9 @@ class _VoiceListeningDialogState extends State<VoiceListeningDialog> {
     });
   }
 
-  void _finish() {
+  Future<void> _finish() async {
+    if (_isProcessing) return;
+
     final voiceService = context.read<VoiceService>();
     voiceService.stopListening();
 
@@ -40,9 +44,24 @@ class _VoiceListeningDialogState extends State<VoiceListeningDialog> {
       return;
     }
 
-    // Parse the text into a structured task draft
-    final draft = voiceService.parseTask(_text);
-    Navigator.of(context).pop(draft);
+    setState(() => _isProcessing = true);
+
+    try {
+      // Use AI service for intelligent parsing
+      final aiService = context.read<AiService>();
+      final draft = await aiService.parseTaskFromText(_text);
+
+      if (mounted) {
+        Navigator.of(context).pop(draft);
+      }
+    } catch (e) {
+      // Fallback to simple parsing if AI fails
+      debugPrint('AI parsing failed: $e, using fallback');
+      final draft = voiceService.parseTask(_text);
+      if (mounted) {
+        Navigator.of(context).pop(draft);
+      }
+    }
   }
 
   @override

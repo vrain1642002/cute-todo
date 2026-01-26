@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/localization_service.dart';
 import '../services/firestore_service.dart';
+import '../services/image_upload_service.dart';
 import '../services/theme_service.dart';
 import '../models/user_model.dart';
 import '../models/todo_model.dart';
@@ -16,6 +17,8 @@ import '../widgets/kanban_header.dart';
 import '../widgets/kanban_board.dart';
 import '../widgets/settings_dialog.dart';
 import '../widgets/add_task_sheet.dart';
+import '../widgets/task_detail_sheet.dart';
+import '../services/notification_service.dart';
 import '../widgets/voice_dialog.dart';
 import '../widgets/pet_widget.dart';
 import '../services/voice_service.dart'; // Needed for TaskDraft
@@ -32,6 +35,7 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
   UserModel? _currentUser;
   bool _isLoading = true;
   final ScrollController _scrollController = ScrollController();
+  final ImageUploadService _imageUploadService = ImageUploadService();
   Timer? _autoScrollTimer;
   double _scrollSpeed = 0;
 
@@ -133,20 +137,17 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
     TodoPriority? initialPriority,
     DateTime? initialDueDate,
   }) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => AddTaskSheet(
-        initialTitle: initialTitle ??
-            '', // Ensure non-null if AddTaskSheet requires String.
+        initialTitle: initialTitle ?? '',
         initialPriority: initialPriority,
         initialDueDate: initialDueDate,
         onTaskAdded: () {
           setState(() {});
         },
-        onTaskCreate: (title, description, dueDate, priority, category,
-            energyLevel) async {
+        onTaskCreate:
+            (title, description, dueDate, priority, category, imageUrls) async {
           // Create task logic
           final firestoreService = context.read<FirestoreService>();
           final authService = context.read<AuthService>();
@@ -158,14 +159,24 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
             description: description ?? '', // Handle nullable description
             status: TodoStatus.todo,
             priority: priority,
-            energyLevel: energyLevel,
             category: category,
             dueDate: dueDate,
             createdAt: DateTime.now(),
+            imageUrls: imageUrls,
             // xpReward will be auto-calculated by TodoModel based on priority & category
           );
 
-          await firestoreService.createTodo(newTodo);
+          final notificationService = context.read<NotificationService>();
+          final docId = await firestoreService.createTodo(newTodo);
+
+          if (!mounted) return;
+
+          // Schedule offline notification
+          if (dueDate != null) {
+            await notificationService.scheduleDeadlineNotification(
+              newTodo.copyWith(id: docId),
+            );
+          }
         },
       ),
     );
@@ -197,74 +208,173 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
     final firestoreService = context.read<FirestoreService>();
     final authService = context.read<AuthService>();
 
-    // If moving to completed, award XP
+    // 🚀 OPTIMIZATION: Fire database update immediately without waiting
+    firestoreService.updateTodoStatus(todo.id, newStatus, newIndex);
+
+    // If moving to completed, process rewards in background
     if (newStatus == TodoStatus.completed &&
         todo.status != TodoStatus.completed) {
-      var updatedUser = await authService.addXP(
-        authService.currentUser!.uid,
-        todo.xpReward,
-      );
+      _handleCompletionRewards(todo, authService);
+    }
+  }
 
-      // Pet Evolution Logic
-      if (updatedUser != null && updatedUser.pet != null) {
-        var pet = updatedUser.pet!;
-        // Shared XP: Pet Level roughly tracks User Level
-        // But we want visual evolution.
-        PetStage stage = pet.stage;
-        bool evolved = false;
+  Future<void> _handleCompletionRewards(
+      TodoModel todo, AuthService authService) async {
+    // Award XP
+    var updatedUser = await authService.addXP(
+      authService.currentUser!.uid,
+      todo.xpReward,
+    );
 
-        // Evolve to Adult at User Level 5
-        if (stage == PetStage.baby && updatedUser.level >= 5) {
-          stage = PetStage.adult;
-          evolved = true;
+    // Pet Evolution Logic
+    if (updatedUser != null && updatedUser.pet != null) {
+      var pet = updatedUser.pet!;
+      PetStage stage = pet.stage;
+      bool evolved = false;
+
+      // Evolve to Adult at User Level 5
+      if (stage == PetStage.baby && updatedUser.level >= 5) {
+        stage = PetStage.adult;
+        evolved = true;
+      }
+
+      if (evolved) {
+        final evolvedPet = pet.copyWith(stage: stage);
+        updatedUser = updatedUser.copyWith(pet: evolvedPet);
+
+        await authService.updateUserData(updatedUser);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  context.read<LocalizationService>().translate('pet_evolved')),
+              backgroundColor: Colors.purpleAccent,
+              duration: const Duration(seconds: 3),
+            ),
+          );
         }
+      }
+    }
 
-        if (evolved) {
-          final evolvedPet = pet.copyWith(stage: stage);
-          updatedUser = updatedUser.copyWith(pet: evolvedPet);
+    if (updatedUser != null && mounted) {
+      setState(() {
+        _currentUser = updatedUser;
+      });
 
-          await authService.updateUserData(updatedUser);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.celebration, color: Colors.white),
+              const SizedBox(width: 12),
+              Text(
+                  '🎉 ${context.read<LocalizationService>().translate('great_job')} +${todo.xpReward} XP'),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context
-                    .read<LocalizationService>()
-                    .translate('pet_evolved')),
-                backgroundColor: Colors.purpleAccent,
-                duration: const Duration(seconds: 3),
-              ),
-            );
+  Future<void> _deleteTodo(String id) async {
+    final loc = context.read<LocalizationService>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            const SizedBox(width: 12),
+            Text(loc.translate('delete_task_title')),
+          ],
+        ),
+        content: Text(loc.translate('delete_task_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(loc.translate('cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(loc.translate('delete'),
+                style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final firestoreService = context.read<FirestoreService>();
+
+      // Cleanup media files
+      final todo = await firestoreService.getTodo(id);
+      if (todo != null && todo.imageUrls.isNotEmpty) {
+        for (final url in todo.imageUrls) {
+          if (url.startsWith('http')) {
+            await _imageUploadService.deleteFile(url);
           }
         }
       }
 
-      if (updatedUser != null && mounted) {
-        setState(() {
-          _currentUser = updatedUser;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.celebration, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(
-                    '🎉 ${context.read<LocalizationService>().translate('great_job')} +${todo.xpReward} XP'),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+      await firestoreService.deleteTodo(id);
     }
+  }
 
-    await firestoreService.updateTodoStatus(todo.id, newStatus, newIndex);
+  Future<void> _deleteAllTodos(TodoStatus status) async {
+    final firestoreService = context.read<FirestoreService>();
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUser!.uid;
+
+    final todos =
+        await firestoreService.getUserTodos(userId, status: status).first;
+    for (var todo in todos) {
+      // Cleanup media files
+      if (todo.imageUrls.isNotEmpty) {
+        for (final url in todo.imageUrls) {
+          if (url.startsWith('http')) {
+            await _imageUploadService.deleteFile(url);
+          }
+        }
+      }
+      await firestoreService.deleteTodo(todo.id);
+    }
+  }
+
+  void _showTaskDetail(TodoModel todo) {
+    showDialog(
+      context: context,
+      builder: (context) => TaskDetailSheet(
+        todo: todo,
+        onTaskUpdate: (updatedTodo) async {
+          final firestoreService = context.read<FirestoreService>();
+          final notificationService = context.read<NotificationService>();
+
+          await firestoreService.updateTodo(updatedTodo);
+
+          if (!mounted) return;
+
+          // Update notification
+          if (updatedTodo.status == TodoStatus.todo &&
+              updatedTodo.dueDate != null) {
+            await notificationService.scheduleDeadlineNotification(updatedTodo);
+          } else {
+            await notificationService.cancelNotification(updatedTodo.id);
+          }
+        },
+      ),
+    );
   }
 
   @override
@@ -318,6 +428,9 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
                       scrollController: _scrollController,
                       onTodoDropped: _handleTodoDropped,
                       onTodoDelete: _deleteTodo,
+                      onTodoDeleteAll: _deleteAllTodos,
+                      onTodoTap: _showTaskDetail,
+                      onTodoLongPress: _showStatusChangeSheet,
                       onDragUpdate: _handleDragUpdate,
                       onDragEnd: _stopAutoScroll,
                     ),
@@ -351,6 +464,119 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showStatusChangeSheet(TodoModel todo) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Change Status',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.lightText,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildStatusOption(
+              todo,
+              TodoStatus.todo,
+              'To Do',
+              '📋',
+              AppColors.columnTodo,
+            ),
+            const SizedBox(height: 8),
+            _buildStatusOption(
+              todo,
+              TodoStatus.inProgress,
+              'In Progress',
+              '🚀',
+              AppColors.columnInProgress,
+            ),
+            const SizedBox(height: 8),
+            _buildStatusOption(
+              todo,
+              TodoStatus.completed,
+              'Done',
+              '✅',
+              AppColors.columnDone,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusOption(
+    TodoModel todo,
+    TodoStatus status,
+    String label,
+    String emoji,
+    Color color,
+  ) {
+    final isSelected = todo.status == status;
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        if (!isSelected) {
+          // Determine new index (append to end of list for simplicity)
+          // We'll trust the board to re-sort or place it at the end
+          // For a smoother UX, we could try to calculate the index,
+          // but appending is a safe default for a "quick move" action.
+          // However, to keep it consistent with drop, we ideally want it at the top or bottom.
+          // Let's just use 0 (top) or a large number (bottom).
+          // The reordering logic in KanbanBoard/Backend handles index updates.
+          // For now, let's pass 0 to move to top, or we can fetch the list length if we had it.
+          // Simpler: Just pass 0.
+          _handleTodoDropped(todo, status, 0);
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? Border.all(color: color, width: 2) : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color : AppColors.lightText,
+              ),
+            ),
+            if (isSelected) ...[
+              const Spacer(),
+              Icon(Icons.check_circle_rounded, color: color),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -518,42 +744,5 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
       context: context,
       builder: (context) => const SettingsDialog(),
     );
-  }
-
-  Future<void> _deleteTodo(String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.error),
-            SizedBox(width: 12),
-            Text('Delete Task?'),
-          ],
-        ),
-        content: const Text('Are you sure you want to delete this task?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final firestoreService = context.read<FirestoreService>();
-      await firestoreService.deleteTodo(id);
-    }
   }
 }

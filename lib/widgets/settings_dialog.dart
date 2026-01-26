@@ -1,7 +1,9 @@
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../services/localization_service.dart';
+import '../services/auth_service.dart';
 import '../core/constants/colors.dart';
 
 class SettingsDialog extends StatelessWidget {
@@ -98,6 +100,24 @@ class SettingsDialog extends StatelessWidget {
               ],
             ),
 
+            const SizedBox(height: 24),
+
+            // Diagnostic Section
+            OutlinedButton.icon(
+              onPressed: () => _runConnectionTest(context),
+              icon: const Icon(Icons.speed_rounded, size: 18),
+              label: const Text('Test Network & Storage'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.info,
+                side: const BorderSide(color: AppColors.info),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
 
             // Version Info
@@ -170,5 +190,67 @@ class SettingsDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _runConnectionTest(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final logs = StringBuffer();
+    logs.writeln('=== DIAGNOSTIC REPORT ===');
+    logs.writeln('Time: ${DateTime.now()}');
+
+    try {
+      // 1. Check Auth
+      final auth = context.read<AuthService>();
+      final user = auth.currentUser;
+      logs.writeln('\n[AUTH]');
+      if (user != null) {
+        logs.writeln('✅ User ID: ${user.uid}');
+        logs.writeln('✅ Email: ${user.email}');
+      } else {
+        logs.writeln('❌ No user logged in');
+      }
+
+      // 2. Check Storage (Cloudinary)
+      logs.writeln('\n[STORAGE - Cloudinary]');
+      logs.writeln('Checking connection to api.cloudinary.com...');
+
+      try {
+        final response = await http
+            .get(Uri.parse('https://api.cloudinary.com/'))
+            .timeout(const Duration(seconds: 10));
+        logs.writeln('✅ Connection Success! (Status: ${response.statusCode})');
+
+        logs.writeln(
+            '\nNote: To test a real upload, try creating a task with an image.');
+      } catch (e) {
+        logs.writeln('❌ Connection FAILED: $e');
+      }
+    } catch (e) {
+      logs.writeln('\n❌ CRITICAL ERROR: $e');
+    }
+
+    if (context.mounted) {
+      Navigator.pop(context); // Close loading
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Diagnostic Result'),
+          content: SingleChildScrollView(
+            child: SelectableText(logs.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
