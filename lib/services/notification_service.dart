@@ -5,7 +5,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/todo_model.dart';
+import 'email_service.dart';
+
+// Conditional import for web notifications
+import 'web_notification_stub.dart'
+    if (dart.library.html) 'web_notification_helper.dart';
 
 /// Background message handler - must be top-level function
 @pragma('vm:entry-point')
@@ -22,7 +28,11 @@ class NotificationService {
 
   Timer? _deadlineCheckTimer;
   String? _currentUserId;
+  String? _currentUserEmail;
+  String? _currentUserName;
   final Map<String, Timer> _webTimers = {}; // Fallback for Web scheduling
+  String _languageCode = 'vi'; // Default to Vietnamese
+  final EmailService _emailService = EmailService();
 
   /// Initialize notification service
   Future<void> init() async {
@@ -59,7 +69,29 @@ class NotificationService {
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    debugPrint('Notification service initialized');
+    // Request web notification permission
+    if (kIsWeb) {
+      await requestWebNotificationPermission();
+    }
+
+    // Load saved language preference
+    final prefs = await SharedPreferences.getInstance();
+    _languageCode = prefs.getString('language_code') ?? 'vi';
+
+    debugPrint('Notification service initialized (lang: $_languageCode)');
+  }
+
+  /// Update notification language
+  void setLanguage(String languageCode) {
+    _languageCode = languageCode;
+    debugPrint('Notification language set to: $languageCode');
+  }
+
+  /// Set user info for email notifications
+  void setUserInfo({required String? email, required String? displayName}) {
+    _currentUserEmail = email;
+    _currentUserName = displayName;
+    debugPrint('Notification user set: $email');
   }
 
   /// Schedule a local notification 10 minutes before deadline
@@ -67,7 +99,7 @@ class NotificationService {
     if (todo.dueDate == null) return;
 
     final now = DateTime.now();
-    final scheduledDate = todo.dueDate!.subtract(const Duration(minutes: 10));
+    final scheduledDate = todo.dueDate!.subtract(const Duration(minutes: 3));
 
     // If scheduled time is in the past, don't schedule
     if (scheduledDate.isBefore(now)) return;
@@ -162,15 +194,17 @@ class NotificationService {
 
     try {
       final now = DateTime.now();
-      final tenMinutesLater = now.add(const Duration(minutes: 10));
+      final fiveMinutesAgo = now.subtract(const Duration(minutes: 5));
+      final threeMinutesLater = now.add(const Duration(minutes: 3));
 
       final querySnapshot = await _firestore
           .collection('todos')
           .where('userId', isEqualTo: _currentUserId)
           .where('status', isEqualTo: 'todo')
-          .where('dueDate', isGreaterThan: Timestamp.fromDate(now))
+          // Catch tasks due between 5 mins ago and 3 mins from now
+          .where('dueDate', isGreaterThan: Timestamp.fromDate(fiveMinutesAgo))
           .where('dueDate',
-              isLessThanOrEqualTo: Timestamp.fromDate(tenMinutesLater))
+              isLessThanOrEqualTo: Timestamp.fromDate(threeMinutesLater))
           .get();
 
       for (final doc in querySnapshot.docs) {
@@ -192,6 +226,37 @@ class NotificationService {
 
   /// Show local notification for upcoming deadline (Foreground)
   Future<void> _showDeadlineNotification(TodoModel todo) async {
+    final minutesLeft = todo.dueDate!.difference(DateTime.now()).inMinutes;
+
+    // Language-aware notification messages
+    final bool isVietnamese = _languageCode == 'vi';
+    final title =
+        isVietnamese ? '⏰ Deadline sắp đến!' : '⏰ Deadline approaching!';
+    final body = isVietnamese
+        ? '${todo.title} - còn $minutesLeft phút'
+        : '${todo.title} - $minutesLeft minutes left';
+
+    if (kIsWeb) {
+      // Use browser Notification API on web
+      await showWebNotification(title, body);
+      debugPrint('Web notification shown for: ${todo.title}');
+    }
+
+    // Send email notification if configured
+    if (_emailService.isConfigured && _currentUserEmail != null) {
+      await _emailService.sendDeadlineReminder(
+        toEmail: _currentUserEmail!,
+        userName: _currentUserName ?? '',
+        taskTitle: todo.title,
+        minutesLeft: minutesLeft,
+        dueTime: _formatTime(todo.dueDate!),
+        languageCode: _languageCode,
+      );
+    }
+
+    if (kIsWeb) return;
+
+    // Mobile: use flutter_local_notifications
     const androidDetails = AndroidNotificationDetails(
       'deadline_channel',
       'Deadline Reminders',
@@ -210,12 +275,10 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    final minutesLeft = todo.dueDate!.difference(DateTime.now()).inMinutes;
-
     await _localNotifications.show(
       todo.id.hashCode,
-      '⏰ Deadline sắp đến!',
-      '${todo.title} - còn $minutesLeft phút',
+      title,
+      body,
       details,
     );
   }

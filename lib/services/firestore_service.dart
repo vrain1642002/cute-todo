@@ -22,10 +22,11 @@ class FirestoreService {
   // Update todo
   Future<void> updateTodo(TodoModel todo) async {
     try {
-      await _firestore
-          .collection('todos')
-          .doc(todo.id)
-          .update(todo.toFirestore());
+      final data = todo.toFirestore();
+      // Reset notification flag so it can trigger again for the new date
+      data['notificationSent'] = false;
+
+      await _firestore.collection('todos').doc(todo.id).update(data);
     } catch (e) {
       debugPrint('Error updating todo: $e');
       rethrow;

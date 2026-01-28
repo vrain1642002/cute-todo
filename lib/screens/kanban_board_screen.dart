@@ -112,6 +112,13 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
     if (user != null) {
       final userData = await authService.getUserData(user.uid);
       if (mounted) {
+        // Set user info for email notifications
+        final notificationService = context.read<NotificationService>();
+        notificationService.setUserInfo(
+          email: user.email,
+          displayName: userData?.displayName,
+        );
+
         setState(() {
           _currentUser = userData;
           _isLoading = false;
@@ -366,11 +373,12 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
           if (!mounted) return;
 
           // Update notification
+          // Always cancel old one first to avoid duplicates or orphaned timers
+          await notificationService.cancelNotification(updatedTodo.id);
+
           if (updatedTodo.status == TodoStatus.todo &&
               updatedTodo.dueDate != null) {
             await notificationService.scheduleDeadlineNotification(updatedTodo);
-          } else {
-            await notificationService.cancelNotification(updatedTodo.id);
           }
         },
       ),
