@@ -8,6 +8,8 @@ import '../models/todo_model.dart';
 import '../core/constants/colors.dart';
 import '../services/localization_service.dart';
 import '../core/utils/image_provider_util.dart';
+import '../services/image_upload_service.dart';
+import '../services/auth_service.dart';
 
 class AddTaskSheet extends StatefulWidget {
   final VoidCallback onTaskAdded;
@@ -45,6 +47,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   final List<XFile> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   final FocusNode _titleFocusNode = FocusNode();
+  final ImageUploadService _imageUploadService = ImageUploadService();
   bool _isLoading = false;
 
   @override
@@ -153,6 +156,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     setState(() => _isLoading = true);
 
     try {
+      final authService = context.read<AuthService>();
+      final userId = authService.currentUser?.uid ?? 'anonymous';
+
+      // Upload images to Cloudinary before creating task
+      final List<String> remoteUrls =
+          await _imageUploadService.uploadFiles(_selectedImages, userId);
+
       await widget.onTaskCreate(
         _titleController.text.trim(),
         _descriptionController.text.trim().isEmpty
@@ -161,7 +171,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         _dueDate,
         _priority,
         _category,
-        _selectedImages.map((e) => e.path).toList(),
+        remoteUrls,
       );
 
       if (mounted) {
