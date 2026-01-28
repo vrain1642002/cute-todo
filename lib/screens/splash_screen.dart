@@ -57,12 +57,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 2));
+    // Give some time for animations and basic loading
+    await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
 
     final authService = context.read<AuthService>();
-    final user = authService.currentUser;
+
+    // Wait for the first auth state event (it might be null or a User)
+    // This is more reliable than checking currentUser immediately after init
+    final user = await authService.authStateChanges.first;
+
+    if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

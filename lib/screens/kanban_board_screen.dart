@@ -23,6 +23,7 @@ import '../widgets/voice_dialog.dart';
 import '../widgets/pet_widget.dart';
 import '../services/voice_service.dart'; // Needed for TaskDraft
 import 'login_screen.dart';
+import 'social_screen.dart';
 
 class KanbanBoardScreen extends StatefulWidget {
   const KanbanBoardScreen({super.key});
@@ -418,6 +419,13 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
                       palette: palette,
                       onSignOut: _handleSignOut,
                       onSettingsTap: _showSettingsDialog,
+                      onSocialTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SocialScreen()),
+                        );
+                      },
                     ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),

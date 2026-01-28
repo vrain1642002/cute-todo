@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For debugPrint
 import '../models/todo_model.dart';
+import '../models/user_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -14,7 +15,7 @@ class FirestoreService {
           await _firestore.collection('todos').add(todo.toFirestore());
       return docRef.id;
     } catch (e) {
-      debugPrint('Error creating subtask: $e');
+      debugPrint('Error creating todo: $e');
       rethrow;
     }
   }
@@ -38,7 +39,7 @@ class FirestoreService {
     try {
       await _firestore.collection('todos').doc(todoId).delete();
     } catch (e) {
-      debugPrint('Error reordering todo: $e');
+      debugPrint('Error deleting todo: $e');
       rethrow;
     }
   }
@@ -141,114 +142,9 @@ class FirestoreService {
     });
   }
 
-  // Get todos due today
-  Stream<List<TodoModel>> getTodosDueToday(String userId) {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-
-    return _firestore
-        .collection('todos')
-        .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: TodoStatus.todo.name)
-        .where('dueDate',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('dueDate', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => TodoModel.fromFirestore(doc)).toList();
-    });
-  }
-
-  // Get overdue todos
-  Stream<List<TodoModel>> getOverdueTodos(String userId) {
-    final now = DateTime.now();
-
-    return _firestore
-        .collection('todos')
-        .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: TodoStatus.todo.name)
-        .where('dueDate', isLessThan: Timestamp.fromDate(now))
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => TodoModel.fromFirestore(doc)).toList();
-    });
-  }
-
-  // Toggle todo status (legacy support)
-  Future<void> toggleTodoStatus(String todoId, TodoStatus newStatus) async {
-    try {
-      final updates = <String, dynamic>{
-        'status': newStatus.name,
-        'updatedAt': Timestamp.now(),
-      };
-
-      if (newStatus == TodoStatus.completed) {
-        updates['completedAt'] = Timestamp.now();
-      } else {
-        updates['completedAt'] = null;
-      }
-
-      await _firestore.collection('todos').doc(todoId).update(updates);
-    } catch (e) {
-      debugPrint('Error toggling subtask: $e');
-      rethrow;
-    }
-  }
-
-  // Get completion stats
-  Future<Map<String, int>> getCompletionStats(String userId) async {
-    try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-
-      final completedToday = await _firestore
-          .collection('todos')
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: TodoStatus.completed.name)
-          .where('completedAt',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .get();
-
-      final totalCompleted = await _firestore
-          .collection('todos')
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: TodoStatus.completed.name)
-          .get();
-
-      final totalTodo = await _firestore
-          .collection('todos')
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: TodoStatus.todo.name)
-          .get();
-
-      final totalInProgress = await _firestore
-          .collection('todos')
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: TodoStatus.inProgress.name)
-          .get();
-
-      return {
-        'completedToday': completedToday.docs.length,
-        'totalCompleted': totalCompleted.docs.length,
-        'totalTodo': totalTodo.docs.length,
-        'totalInProgress': totalInProgress.docs.length,
-      };
-    } catch (e) {
-      debugPrint('Error getting completion stats: $e');
-      return {
-        'completedToday': 0,
-        'totalCompleted': 0,
-        'totalTodo': 0,
-        'totalInProgress': 0
-      };
-    }
-  }
-
   // Get unique categories for user
   Future<List<String>> getUserCategories(String userId) async {
     try {
-      // Categories are stored in the todos themselves
       final todosSnapshot = await _firestore
           .collection('todos')
           .where('userId', isEqualTo: userId)
@@ -267,5 +163,133 @@ class FirestoreService {
       debugPrint('Error getting categories: $e');
       return [];
     }
+  }
+
+  // ==================== SOCIAL ====================
+
+  /// Search for a user by their full UID (Friend ID)
+  Future<UserModel?> searchUserById(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return UserModel.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error searching user: $e');
+      return null;
+    }
+  }
+
+  /// Send a friend request
+  Future<void> sendFriendRequest(String fromId, String toId) async {
+    try {
+      await _firestore.collection('users').doc(toId).update({
+        'friendRequests': FieldValue.arrayUnion([fromId])
+      });
+    } catch (e) {
+      debugPrint('Error sending friend request: $e');
+      rethrow;
+    }
+  }
+
+  /// Accept a friend request
+  Future<void> acceptFriendRequest(String userId, String friendId) async {
+    try {
+      final batch = _firestore.batch();
+
+      // Add to each other's friends list
+      batch.update(_firestore.collection('users').doc(userId), {
+        'friends': FieldValue.arrayUnion([friendId]),
+        'friendRequests': FieldValue.arrayRemove([friendId])
+      });
+      batch.update(_firestore.collection('users').doc(friendId), {
+        'friends': FieldValue.arrayUnion([userId])
+      });
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error accepting friend request: $e');
+      rethrow;
+    }
+  }
+
+  /// Decline a friend request
+  Future<void> declineFriendRequest(String userId, String friendId) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'friendRequests': FieldValue.arrayRemove([friendId])
+      });
+    } catch (e) {
+      debugPrint('Error declining friend request: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a friend
+  Future<void> removeFriend(String userId, String friendId) async {
+    try {
+      final batch = _firestore.batch();
+      batch.update(_firestore.collection('users').doc(userId), {
+        'friends': FieldValue.arrayRemove([friendId])
+      });
+      batch.update(_firestore.collection('users').doc(friendId), {
+        'friends': FieldValue.arrayRemove([userId])
+      });
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error removing friend: $e');
+      rethrow;
+    }
+  }
+
+  /// Update user's current emotion/emoji status
+  Future<void> updateUserEmoji(String userId, String? emoji) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'currentEmoji': emoji,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      debugPrint('Error updating emoji: $e');
+    }
+  }
+
+  /// Update user's status message
+  Future<void> updateStatusMessage(String userId, String? message) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'statusMessage': message,
+        'updatedAt': Timestamp.now(),
+      });
+    } catch (e) {
+      debugPrint('Error updating status message: $e');
+    }
+  }
+
+  /// Get stream of friend models
+  Stream<List<UserModel>> getFriendsStream(List<String> friendIds) {
+    if (friendIds.isEmpty) return Stream.value([]);
+
+    return _firestore
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: friendIds.take(30).toList())
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+    });
+  }
+
+  /// Get stream of friend request models
+  Stream<List<UserModel>> getFriendRequestsStream(List<String> requestIds) {
+    if (requestIds.isEmpty) return Stream.value([]);
+
+    return _firestore
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: requestIds.take(30).toList())
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+    });
   }
 }

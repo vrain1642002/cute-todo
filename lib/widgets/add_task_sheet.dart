@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/todo_model.dart';
 import '../core/constants/colors.dart';
 import '../services/localization_service.dart';
+import '../core/utils/image_provider_util.dart';
 
 class AddTaskSheet extends StatefulWidget {
   final VoidCallback onTaskAdded;
@@ -548,14 +548,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(12),
                                         image: DecorationImage(
-                                          image: kIsWeb
-                                              ? NetworkImage(
-                                                  _selectedImages[index].path)
-                                              : FileImage(File(
-                                                  _selectedImages[index]
-                                                      .path)) as ImageProvider,
+                                          image: getImageProvider(
+                                              _selectedImages[index].path),
                                           fit: BoxFit.cover,
-                                          onError: (_, __) {},
+                                          onError: (exception, stackTrace) {
+                                            debugPrint(
+                                                'Image loading failed: $exception');
+                                          },
                                         ),
                                       ),
                                     ),

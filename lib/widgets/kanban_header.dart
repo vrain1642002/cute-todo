@@ -10,6 +10,7 @@ class KanbanHeader extends StatelessWidget {
   final ThemePalette palette;
   final VoidCallback onSignOut;
   final VoidCallback onSettingsTap;
+  final VoidCallback onSocialTap;
 
   const KanbanHeader({
     super.key,
@@ -17,6 +18,7 @@ class KanbanHeader extends StatelessWidget {
     required this.palette,
     required this.onSignOut,
     required this.onSettingsTap,
+    required this.onSocialTap,
   });
 
   @override
@@ -26,38 +28,56 @@ class KanbanHeader extends StatelessWidget {
       child: Row(
         children: [
           // User Avatar with Level Border
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: palette.primary, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: palette.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: palette.primary, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: palette.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 26,
-              backgroundImage:
-                  (user.photoURL != null && user.photoURL!.isNotEmpty)
-                      ? NetworkImage(user.photoURL!)
+                child: CircleAvatar(
+                  radius: 26,
+                  backgroundImage:
+                      (user.photoURL != null && user.photoURL!.isNotEmpty)
+                          ? NetworkImage(user.photoURL!)
+                          : null,
+                  backgroundColor: palette.primary.withValues(alpha: 0.2),
+                  child: (user.photoURL == null || user.photoURL!.isEmpty)
+                      ? Text(
+                          user.displayName.isNotEmpty
+                              ? user.displayName[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: palette.primary,
+                          ),
+                        )
                       : null,
-              backgroundColor: palette.primary.withValues(alpha: 0.2),
-              child: (user.photoURL == null || user.photoURL!.isEmpty)
-                  ? Text(
-                      user.displayName.isNotEmpty
-                          ? user.displayName[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: palette.primary,
-                      ),
-                    )
-                  : null,
-            ),
+                ),
+              ),
+              if (user.currentEmoji != null)
+                Positioned(
+                  right: -5,
+                  bottom: -5,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(user.currentEmoji!,
+                        style: const TextStyle(fontSize: 16)),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: 14),
 
@@ -90,6 +110,15 @@ class KanbanHeader extends StatelessWidget {
           ),
 
           // Actions
+          IconButton(
+            onPressed: onSocialTap,
+            icon: const Icon(Icons.people_alt_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: palette.surface,
+              padding: const EdgeInsets.all(12),
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             onPressed: onSignOut,
             icon: const Icon(Icons.logout_rounded),

@@ -86,6 +86,10 @@ class UserModel {
   final DateTime createdAt;
   final UserSettings settings;
   final PetModel? pet;
+  final List<String> friends;
+  final List<String> friendRequests;
+  final String? currentEmoji;
+  final String? statusMessage;
 
   UserModel({
     required this.uid,
@@ -98,6 +102,10 @@ class UserModel {
     required this.createdAt,
     UserSettings? settings,
     this.pet,
+    this.friends = const [],
+    this.friendRequests = const [],
+    this.currentEmoji,
+    this.statusMessage,
   }) : settings = settings ?? UserSettings();
 
   // Convert from Firestore
@@ -116,6 +124,10 @@ class UserModel {
           ? UserSettings.fromMap(data['settings'])
           : UserSettings(),
       pet: data['pet'] != null ? PetModel.fromMap(data['pet']) : null,
+      friends: List<String>.from(data['friends'] ?? []),
+      friendRequests: List<String>.from(data['friendRequests'] ?? []),
+      currentEmoji: data['currentEmoji'],
+      statusMessage: data['statusMessage'],
     );
   }
 
@@ -131,6 +143,10 @@ class UserModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'settings': settings.toMap(),
       'pet': pet?.toMap(),
+      'friends': friends,
+      'friendRequests': friendRequests,
+      'currentEmoji': currentEmoji,
+      'statusMessage': statusMessage,
     };
   }
 
@@ -151,6 +167,10 @@ class UserModel {
     DateTime? createdAt,
     UserSettings? settings,
     PetModel? pet,
+    List<String>? friends,
+    List<String>? friendRequests,
+    String? currentEmoji,
+    String? statusMessage,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -163,6 +183,10 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       settings: settings ?? this.settings,
       pet: pet ?? this.pet,
+      friends: friends ?? this.friends,
+      friendRequests: friendRequests ?? this.friendRequests,
+      currentEmoji: currentEmoji ?? this.currentEmoji,
+      statusMessage: statusMessage ?? this.statusMessage,
     );
   }
 }
