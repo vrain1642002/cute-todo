@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'support_action_model.dart';
 
 enum PetType { cat, dog }
 
@@ -90,6 +91,8 @@ class UserModel {
   final List<String> friendRequests;
   final String? currentEmoji;
   final String? statusMessage;
+  final HouseVisit? lastVisitedBy;
+  final int unseenSupportCount;
 
   UserModel({
     required this.uid,
@@ -106,6 +109,8 @@ class UserModel {
     this.friendRequests = const [],
     this.currentEmoji,
     this.statusMessage,
+    this.lastVisitedBy,
+    this.unseenSupportCount = 0,
   }) : settings = settings ?? UserSettings();
 
   // Convert from Firestore
@@ -128,6 +133,10 @@ class UserModel {
       friendRequests: List<String>.from(data['friendRequests'] ?? []),
       currentEmoji: data['currentEmoji'],
       statusMessage: data['statusMessage'],
+      lastVisitedBy: data['lastVisitedBy'] != null
+          ? HouseVisit.fromMap(data['lastVisitedBy'])
+          : null,
+      unseenSupportCount: data['unseenSupportCount'] ?? 0,
     );
   }
 
@@ -147,6 +156,8 @@ class UserModel {
       'friendRequests': friendRequests,
       'currentEmoji': currentEmoji,
       'statusMessage': statusMessage,
+      'lastVisitedBy': lastVisitedBy?.toMap(),
+      'unseenSupportCount': unseenSupportCount,
     };
   }
 
@@ -171,6 +182,8 @@ class UserModel {
     List<String>? friendRequests,
     String? currentEmoji,
     String? statusMessage,
+    HouseVisit? lastVisitedBy,
+    int? unseenSupportCount,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -187,6 +200,8 @@ class UserModel {
       friendRequests: friendRequests ?? this.friendRequests,
       currentEmoji: currentEmoji ?? this.currentEmoji,
       statusMessage: statusMessage ?? this.statusMessage,
+      lastVisitedBy: lastVisitedBy ?? this.lastVisitedBy,
+      unseenSupportCount: unseenSupportCount ?? this.unseenSupportCount,
     );
   }
 }

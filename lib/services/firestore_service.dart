@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart'; // For debugPrint
 import '../models/todo_model.dart';
 import '../models/user_model.dart';
+import '../models/support_action_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -290,6 +291,127 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
+    });
+  }
+
+  // ==================== REAL-TIME SUPPORT ====================
+
+  /// Send a support action to another user
+  Future<void> sendSupportAction({
+    required String fromUserId,
+    required String fromUserName,
+    String? fromUserPhotoUrl,
+    required String toUserId,
+    required String actionType,
+  }) async {
+    try {
+      // Add to recipient's supports subcollection
+      await _firestore
+          .collection('users')
+          .doc(toUserId)
+          .collection('receivedSupports')
+          .add({
+        'fromUserId': fromUserId,
+        'fromUserName': fromUserName,
+        'fromUserPhotoUrl': fromUserPhotoUrl,
+        'actionType': actionType,
+        'timestamp': Timestamp.now(),
+        'seen': false,
+      });
+
+      // Increment unseen count on the recipient
+      await _firestore.collection('users').doc(toUserId).update({
+        'unseenSupportCount': FieldValue.increment(1),
+      });
+    } catch (e) {
+      debugPrint('Error sending support: $e');
+      rethrow;
+    }
+  }
+
+  /// Get stream of received supports for a user
+  Stream<List<SupportAction>> getReceivedSupportsStream(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('receivedSupports')
+        .orderBy('timestamp', descending: true)
+        .limit(20)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => SupportAction.fromFirestore(doc))
+          .toList();
+    });
+  }
+
+  /// Mark a support action as seen
+  Future<void> markSupportAsSeen(String userId, String supportId) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('receivedSupports')
+          .doc(supportId)
+          .update({'seen': true});
+    } catch (e) {
+      debugPrint('Error marking support as seen: $e');
+    }
+  }
+
+  /// Clear all unseen support count
+  Future<void> clearUnseenSupportCount(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'unseenSupportCount': 0,
+      });
+
+      // Mark all supports as seen
+      final supports = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('receivedSupports')
+          .where('seen', isEqualTo: false)
+          .get();
+
+      final batch = _firestore.batch();
+      for (final doc in supports.docs) {
+        batch.update(doc.reference, {'seen': true});
+      }
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error clearing unseen count: $e');
+    }
+  }
+
+  /// Record a visit to a user's house
+  Future<void> recordVisit({
+    required String visitorId,
+    required String visitorName,
+    String? visitorPhotoUrl,
+    required String hostId,
+  }) async {
+    try {
+      await _firestore.collection('users').doc(hostId).update({
+        'lastVisitedBy': {
+          'visitorId': visitorId,
+          'visitorName': visitorName,
+          'visitorPhotoUrl': visitorPhotoUrl,
+          'timestamp': Timestamp.now(),
+        },
+      });
+    } catch (e) {
+      debugPrint('Error recording visit: $e');
+    }
+  }
+
+  /// Get real-time stream of a single user
+  Stream<UserModel?> getUserStream(String userId) {
+    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
+      if (doc.exists) {
+        return UserModel.fromFirestore(doc);
+      }
+      return null;
     });
   }
 }

@@ -23,6 +23,7 @@ class KanbanColumn extends StatefulWidget {
   final ScrollController? parentScrollController;
   final Function(double)? onDragUpdate;
   final VoidCallback? onDragEnd;
+  final bool isReadOnly;
 
   const KanbanColumn({
     super.key,
@@ -41,6 +42,7 @@ class KanbanColumn extends StatefulWidget {
     this.parentScrollController,
     this.onDragUpdate,
     this.onDragEnd,
+    this.isReadOnly = false,
   });
 
   @override
@@ -135,7 +137,9 @@ class _KanbanColumnState extends State<KanbanColumn> {
                   ],
                 ),
               ),
-              if (widget.onTodoDeleteAll != null && widget.todos.isNotEmpty)
+              if (widget.onTodoDeleteAll != null &&
+                  widget.todos.isNotEmpty &&
+                  !widget.isReadOnly)
                 IconButton(
                   onPressed: () => widget.onTodoDeleteAll!(widget.status),
                   icon: const Icon(Icons.delete_sweep_rounded),
@@ -153,6 +157,9 @@ class _KanbanColumnState extends State<KanbanColumn> {
   }
 
   Widget _buildDragTarget(BuildContext context) {
+    if (widget.isReadOnly) {
+      return _buildTaskList(false);
+    }
     return DragTarget<TodoModel>(
       onWillAcceptWithDetails: (details) => true,
       onAcceptWithDetails: (details) {
@@ -264,6 +271,18 @@ class _KanbanColumnState extends State<KanbanColumn> {
   }
 
   Widget _buildDraggableCard(TodoModel todo) {
+    final childWidget = KanbanTaskCard(
+      todo: todo,
+      onTap: () => widget.onTodoTap(todo),
+      onLongPress:
+          widget.isReadOnly ? null : () => widget.onTodoLongPress?.call(todo),
+      onDelete: widget.isReadOnly ? null : () => widget.onTodoDelete(todo),
+    );
+
+    if (widget.isReadOnly) {
+      return childWidget;
+    }
+
     final feedbackWidget = Material(
       color: Colors.transparent,
       child: SizedBox(
@@ -277,13 +296,6 @@ class _KanbanColumnState extends State<KanbanColumn> {
 
     final childWhenDragging =
         Opacity(opacity: 0.3, child: KanbanTaskCard(todo: todo));
-
-    final childWidget = KanbanTaskCard(
-      todo: todo,
-      onTap: () => widget.onTodoTap(todo),
-      onLongPress: () => widget.onTodoLongPress?.call(todo),
-      onDelete: () => widget.onTodoDelete(todo),
-    );
 
     if (kIsWeb) {
       return Draggable<TodoModel>(

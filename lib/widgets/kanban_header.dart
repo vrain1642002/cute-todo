@@ -110,13 +110,40 @@ class KanbanHeader extends StatelessWidget {
           ),
 
           // Actions
-          IconButton(
-            onPressed: onSocialTap,
-            icon: const Icon(Icons.people_alt_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: palette.surface,
-              padding: const EdgeInsets.all(12),
-            ),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: onSocialTap,
+                icon: const Icon(Icons.people_alt_rounded),
+                style: IconButton.styleFrom(
+                  backgroundColor: palette.surface,
+                  padding: const EdgeInsets.all(12),
+                ),
+              ),
+              if (user.unseenSupportCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints:
+                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Text(
+                      '${user.unseenSupportCount > 9 ? '9+' : user.unseenSupportCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: 8),
           IconButton(

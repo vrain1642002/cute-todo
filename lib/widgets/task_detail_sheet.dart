@@ -9,15 +9,18 @@ import '../services/auth_service.dart';
 import '../services/image_upload_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
+import 'package:cached_network_image/cached_network_image.dart';
 
 class TaskDetailSheet extends StatefulWidget {
   final TodoModel todo;
-  final Function(TodoModel updatedTodo) onTaskUpdate;
+  final Function(TodoModel updatedTodo)? onTaskUpdate;
+  final bool isReadOnlyOverride;
 
   const TaskDetailSheet({
     super.key,
     required this.todo,
-    required this.onTaskUpdate,
+    this.onTaskUpdate,
+    this.isReadOnlyOverride = false,
   });
 
   @override
@@ -44,7 +47,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     _priority = widget.todo.priority;
     _category = widget.todo.category;
     _dueDate = widget.todo.dueDate;
-    _isReadOnly = widget.todo.status == TodoStatus.completed;
+    _isReadOnly =
+        widget.isReadOnlyOverride || widget.todo.status == TodoStatus.completed;
     _imageUrls = List.from(widget.todo.imageUrls);
   }
 
@@ -145,7 +149,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
         imageUrls: _imageUrls,
       );
 
-      await widget.onTaskUpdate(updatedTodo);
+      if (widget.onTaskUpdate != null) {
+        await widget.onTaskUpdate!(updatedTodo);
+      }
 
       if (mounted) {
         Navigator.pop(context);
@@ -547,45 +553,31 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                                                         color: Colors.white,
                                                         size: 40)),
                                               )
-                                            : Image.network(
-                                                imageUrl,
+                                            : CachedNetworkImage(
+                                                imageUrl: imageUrl,
                                                 fit: BoxFit.cover,
-                                                loadingBuilder: (context, child,
-                                                    loadingProgress) {
-                                                  if (loadingProgress == null) {
-                                                    return child;
-                                                  }
-                                                  return Container(
-                                                    color: Colors.grey[100],
-                                                    child: Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        value: loadingProgress
-                                                                    .expectedTotalBytes !=
-                                                                null
-                                                            ? loadingProgress
-                                                                    .cumulativeBytesLoaded /
-                                                                loadingProgress
-                                                                    .expectedTotalBytes!
-                                                            : null,
-                                                      ),
+                                                placeholder: (context, url) =>
+                                                    Container(
+                                                  color: Colors.grey[100],
+                                                  child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
                                                     ),
-                                                  );
-                                                },
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Container(
-                                                    color: Colors.grey[200],
-                                                    child: const Center(
-                                                      child: Icon(
-                                                          Icons
-                                                              .broken_image_rounded,
-                                                          color: Colors.grey,
-                                                          size: 32),
-                                                    ),
-                                                  );
-                                                },
+                                                  ),
+                                                ),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        Container(
+                                                  color: Colors.grey[200],
+                                                  child: const Center(
+                                                    child: Icon(
+                                                        Icons
+                                                            .broken_image_rounded,
+                                                        color: Colors.grey,
+                                                        size: 32),
+                                                  ),
+                                                ),
                                               ),
                                       ),
                                     ),
