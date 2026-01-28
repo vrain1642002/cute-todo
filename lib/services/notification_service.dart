@@ -41,13 +41,16 @@ class NotificationService {
       tz.initializeTimeZones();
     }
 
-    // Request permission
-    final settings = await _messaging.requestPermission(
+    // Request permission (Non-blocking)
+    _messaging
+        .requestPermission(
       alert: true,
       badge: true,
       sound: true,
-    );
-    debugPrint('Notification permission: ${settings.authorizationStatus}');
+    )
+        .then((settings) {
+      debugPrint('Notification permission: ${settings.authorizationStatus}');
+    });
 
     // Initialize local notifications
     const androidSettings =
@@ -69,9 +72,9 @@ class NotificationService {
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    // Request web notification permission
+    // Request web notification permission (Non-blocking)
     if (kIsWeb) {
-      await requestWebNotificationPermission();
+      requestWebNotificationPermission();
     }
 
     // Load saved language preference

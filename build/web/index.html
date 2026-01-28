@@ -21,6 +21,11 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Cute Todo - Make productivity fun!">
 
+  <!-- Cache Busting Meta Tags -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- Google Sign-In Client ID -->
   <meta name="google-signin-client_id"
     content="1001696534148-e9vbaf9q042iqp8ppp5988dgg5p5qpqq.apps.googleusercontent.com">
@@ -39,13 +44,7 @@
 </head>
 
 <body>
-  <script>
-    // Tự động thêm mã thời gian để trình duyệt luôn tải bản mới nhất
-    var script = document.createElement('script');
-    script.src = "flutter_bootstrap.js?v=" + new Date().getTime();
-    script.async = true;
-    document.body.appendChild(script);
-  </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 
 </html>
