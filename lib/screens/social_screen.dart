@@ -141,175 +141,299 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildSliverAppBar(UserModel user) {
     return SliverAppBar(
-      expandedHeight: 280,
+      expandedHeight: 310,
       pinned: true,
       backgroundColor: AppColors.lightPrimary,
+      elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.lightPrimary,
-                AppColors.lightPrimary.withValues(alpha: 0.8),
-                const Color(0xFFE8B4F8),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-              child: Column(
-                children: [
-                  // Profile Section
-                  Row(
-                    children: [
-                      Stack(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
-                            child: CircleAvatar(
-                              radius: 35,
-                              backgroundImage: user.photoURL != null
-                                  ? NetworkImage(user.photoURL!)
-                                  : null,
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.2),
-                              child: user.photoURL == null
-                                  ? Text(
-                                      user.displayName.isNotEmpty
-                                          ? user.displayName[0]
-                                          : '?',
-                                      style: const TextStyle(
-                                          fontSize: 28, color: Colors.white),
-                                    )
-                                  : null,
-                            ),
-                          ),
-                          if (user.currentEmoji != null)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(user.currentEmoji!,
-                                    style: const TextStyle(fontSize: 18)),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.displayName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                _buildStatBadge(Icons.people,
-                                    '${user.friends.length} friends'),
-                                const SizedBox(width: 8),
-                                _buildStatBadge(
-                                    Icons.flash_on, 'LV.${user.level}'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+        background: ClipRect(
+          child: Stack(
+            children: [
+              // Vibrant Background Gradient
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.lightPrimary,
+                      AppColors.lightPrimary.withValues(alpha: 0.9),
+                      const Color(0xFFE8B4F8),
+                      const Color(0xFFC084FC),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Friend ID Card
-                  _buildFriendIdCard(user.uid),
-                ],
+                ),
               ),
-            ),
+
+              // Decorative Blobs
+              Positioned(
+                top: -50,
+                right: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+              ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.2, 1.2),
+                    duration: 3.seconds,
+                  ),
+              Positioned(
+                bottom: 40,
+                left: -30,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+              ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
+                    begin: 0,
+                    end: -20,
+                    duration: 4.seconds,
+                  ),
+
+              // Main Content
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  child: Column(
+                    children: [
+                      // Profile Section
+                      Row(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Breathing Glow Effect
+                              Container(
+                                width: 85,
+                                height: 85,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.4),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                              )
+                                  .animate(
+                                      onPlay: (c) => c.repeat(reverse: true))
+                                  .scale(
+                                    begin: const Offset(0.8, 0.8),
+                                    end: const Offset(1.1, 1.1),
+                                    duration: 2.seconds,
+                                  )
+                                  .fadeIn(duration: 2.seconds),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: Colors.white, width: 3),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 35,
+                                  backgroundImage: user.photoURL != null &&
+                                          user.photoURL!.isNotEmpty
+                                      ? NetworkImage(user.photoURL!)
+                                      : null,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.2),
+                                  child: user.photoURL == null ||
+                                          user.photoURL!.isEmpty
+                                      ? Text(
+                                          user.displayName.isNotEmpty
+                                              ? user.displayName[0]
+                                              : '?',
+                                          style: const TextStyle(
+                                              fontSize: 28,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              if (user.currentEmoji != null)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.1),
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(user.currentEmoji!,
+                                        style: const TextStyle(fontSize: 18)),
+                                  ).animate().scale(delay: 400.ms),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user.displayName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black26,
+                                        offset: Offset(0, 2),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    _buildStatBadge(Icons.people_rounded,
+                                        '${user.friends.length} Friends'),
+                                    const SizedBox(width: 10),
+                                    _buildStatBadge(Icons.auto_awesome_rounded,
+                                        'LV.${user.level}'),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1),
+                      const SizedBox(height: 28),
+
+                      // Friend ID Card with Glassmorphism
+                      _buildFriendIdCard(user.uid),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      bottom: TabBar(
-        controller: _tabController,
-        indicatorColor: Colors.white,
-        indicatorWeight: 3,
-        tabs: [
-          Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.people_alt_rounded),
-                const SizedBox(width: 8),
-                Text('Friends (${user.friends.length})'),
-              ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
             ),
           ),
-          Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.notifications_active_rounded),
-                const SizedBox(width: 8),
-                const Text('Activity'),
-                if (user.unseenSupportCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${user.unseenSupportCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          child: TabBar(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            controller: _tabController,
+            indicatorColor: Colors.white,
+            indicatorWeight: 4,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            unselectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
+            unselectedLabelColor: Colors.white70,
+            labelColor: Colors.white,
+            dividerColor: Colors.transparent,
+            tabs: [
+              Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.people_alt_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    Text('Friends (${user.friends.length})'),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.notifications_active_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Activity'),
+                    if (user.unseenSupportCount > 0) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '${user.unseenSupportCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ).animate(onPlay: (c) => c.repeat()).shake(hz: 2),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildStatBadge(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16, color: Colors.white),
+          const SizedBox(width: 6),
           Text(
             text,
             style: const TextStyle(
-                color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -318,36 +442,77 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildFriendIdCard(String uid) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.badge_outlined, color: Colors.white, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              uid,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'monospace',
-                fontSize: 11,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
-            onPressed: () => _copyId(uid),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-    );
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.qr_code_rounded,
+                color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your Friend ID',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  uid,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _copyId(uid),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.copy_rounded,
+                    color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1);
   }
 
   Widget _buildFriendsTab(UserModel user, FirestoreService service) {
@@ -386,23 +551,32 @@ class _SocialScreenState extends State<SocialScreen>
       children: [
         Row(
           children: [
-            const Icon(Icons.mood, color: AppColors.lightPrimary),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.mood_rounded,
+                  color: Colors.orange, size: 20),
+            ),
+            const SizedBox(width: 12),
             const Text(
-              "What's your vibe today?",
+              "How are you feeling?",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.lightPrimary,
+                color: AppColors.lightText,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
-          height: 80,
+          height: 90,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(vertical: 4),
             itemCount: _emojis.length,
             itemBuilder: (context, index) {
               final item = _emojis[index];
@@ -411,42 +585,51 @@ class _SocialScreenState extends State<SocialScreen>
               return GestureDetector(
                 onTap: () => service.updateUserEmoji(user.uid, item['emoji']),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 70,
-                  margin: const EdgeInsets.only(right: 10),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuart,
+                  width: 75,
+                  margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.lightPrimary : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [AppColors.lightPrimary, Color(0xFFC084FC)],
+                          )
+                        : null,
+                    color: isSelected ? null : Colors.white,
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: isSelected
-                          ? AppColors.lightPrimary
-                          : Colors.grey[300]!,
+                      color:
+                          isSelected ? Colors.transparent : Colors.grey[100]!,
                       width: 2,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color:
-                                  AppColors.lightPrimary.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : [],
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected
+                            ? AppColors.lightPrimary.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         item['emoji']!,
-                        style: const TextStyle(fontSize: 28),
-                      ),
-                      const SizedBox(height: 4),
+                        style: const TextStyle(fontSize: 32),
+                      ).animate(target: isSelected ? 1 : 0).scale(
+                            begin: const Offset(1, 1),
+                            end: const Offset(1.2, 1.2),
+                          ),
+                      const SizedBox(height: 6),
                       Text(
                         item['label']!,
                         style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                           color: isSelected ? Colors.white : Colors.grey[600],
                         ),
                       ),
@@ -456,7 +639,7 @@ class _SocialScreenState extends State<SocialScreen>
               )
                   .animate(delay: Duration(milliseconds: 50 * index))
                   .fadeIn()
-                  .slideX(begin: 0.2, end: 0);
+                  .slideX(begin: 0.1);
             },
           ),
         ),
@@ -501,71 +684,92 @@ class _SocialScreenState extends State<SocialScreen>
       children: [
         Row(
           children: [
-            const Icon(Icons.search, color: AppColors.lightPrimary),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.lightPrimary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.person_search_rounded,
+                  color: AppColors.lightPrimary, size: 20),
+            ),
+            const SizedBox(width: 12),
             const Text(
-              'Find Friends by ID',
+              'Find New Friends',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.lightPrimary,
+                color: AppColors.lightText,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 15,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: TextField(
                   controller: _searchController,
+                  style: const TextStyle(fontSize: 15),
                   decoration: InputDecoration(
-                    hintText: 'Paste a Friend ID here...',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    hintText: 'Enter Friend ID...',
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(18),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 16),
-                    prefixIcon: Icon(Icons.tag, color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.alternate_email_rounded,
+                        color: AppColors.lightPrimary.withValues(alpha: 0.5),
+                        size: 20),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Material(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               color: AppColors.lightPrimary,
+              elevation: 4,
+              shadowColor: AppColors.lightPrimary.withValues(alpha: 0.4),
               child: InkWell(
                 onTap: _searchUser,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  height: 54,
+                  width: 54,
+                  alignment: Alignment.center,
                   child: _isSearching
                       ? const SizedBox(
-                          width: 24,
-                          height: 24,
+                          width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
                             color: Colors.white,
-                            strokeWidth: 2,
+                            strokeWidth: 2.5,
                           ),
                         )
-                      : const Icon(Icons.search, color: Colors.white),
+                      : const Icon(Icons.search_rounded,
+                          color: Colors.white, size: 26),
                 ),
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+                  delay: 2.seconds,
+                  duration: 2.seconds,
+                  color: Colors.white24,
+                ),
           ],
         ),
 
@@ -715,28 +919,31 @@ class _SocialScreenState extends State<SocialScreen>
           return Container(
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.grey[100]!, width: 2),
             ),
             child: Column(
               children: [
-                const Text('👋', style: TextStyle(fontSize: 48)),
-                const SizedBox(height: 12),
+                const Text('✨', style: TextStyle(fontSize: 48)),
+                const SizedBox(height: 16),
                 const Text(
-                  'No friends yet!',
+                  'Start your journey!',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.lightText,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
-                  'Share your Friend ID to connect',
-                  style: TextStyle(color: Colors.grey[600]),
+                  'Add friends to visit their houses and support each other',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 13),
                 ),
               ],
             ),
-          );
+          ).animate().fadeIn().scale();
         }
 
         return Column(
@@ -744,95 +951,174 @@ class _SocialScreenState extends State<SocialScreen>
             final index = entry.key;
             final friend = entry.value;
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FriendHouseScreen(friend: friend),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 26,
-                            backgroundImage: friend.photoURL != null
-                                ? NetworkImage(friend.photoURL!)
-                                : null,
-                            child: friend.photoURL == null
-                                ? Text(friend.displayName[0],
-                                    style: const TextStyle(fontSize: 20))
-                                : null,
-                          ),
-                          if (friend.currentEmoji != null)
-                            Positioned(
-                              right: -4,
-                              bottom: -4,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(2),
-                                child: Text(friend.currentEmoji!,
-                                    style: const TextStyle(fontSize: 16)),
-                              ),
-                            ),
-                        ],
+            return Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey[50]!, width: 1.5),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FriendHouseScreen(friend: friend),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Stack(
                           children: [
-                            Text(
-                              friend.displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                            Container(
+                              padding: const EdgeInsets.all(2.5),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: AppColors.lightPrimary
+                                        .withValues(alpha: 0.2),
+                                    width: 2),
+                              ),
+                              child: CircleAvatar(
+                                radius: 26,
+                                backgroundImage: friend.photoURL != null &&
+                                        friend.photoURL!.isNotEmpty
+                                    ? NetworkImage(friend.photoURL!)
+                                    : null,
+                                backgroundColor: AppColors.lightPrimary
+                                    .withValues(alpha: 0.1),
+                                child: friend.photoURL == null ||
+                                        friend.photoURL!.isEmpty
+                                    ? Text(
+                                        friend.displayName.isNotEmpty
+                                            ? friend.displayName[0]
+                                                .toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(
+                                            fontSize: 20,
+                                            color: AppColors.lightPrimary,
+                                            fontWeight: FontWeight.bold))
+                                    : null,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Level ${friend.level} • ${friend.streak} day streak 🔥',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
+                            if (friend.currentEmoji != null)
+                              Positioned(
+                                right: -2,
+                                bottom: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black12, blurRadius: 4)
+                                    ],
+                                  ),
+                                  child: Text(friend.currentEmoji!,
+                                      style: const TextStyle(fontSize: 14)),
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightPrimary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                friend.displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                  color: AppColors.lightText,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'LV.${friend.level}',
+                                      style: TextStyle(
+                                          color: Colors.amber[900],
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.local_fire_department_rounded,
+                                      size: 14, color: Colors.orange[400]),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${friend.streak} Streak',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.home_rounded,
-                          color: AppColors.lightPrimary,
-                          size: 22,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.lightPrimary,
+                                AppColors.lightPrimary.withValues(alpha: 0.7),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.lightPrimary
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.home_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             )
-                .animate(delay: Duration(milliseconds: 80 * index))
-                .fadeIn()
-                .slideX(begin: 0.1, end: 0);
+                .animate(delay: Duration(milliseconds: 100 * index))
+                .fadeIn(duration: 400.ms)
+                .slideX(begin: 0.05, duration: 400.ms);
           }).toList(),
         );
       },
@@ -848,35 +1134,58 @@ class _SocialScreenState extends State<SocialScreen>
 
         return Column(
           children: requests.map((req) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.orange[100]!, width: 1.5),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      backgroundImage: req.photoURL != null
-                          ? NetworkImage(req.photoURL!)
-                          : null,
-                      child: req.photoURL == null
-                          ? Text(req.displayName[0])
-                          : null,
+                    Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.orange[200]!),
+                      ),
+                      child: CircleAvatar(
+                        backgroundImage:
+                            req.photoURL != null && req.photoURL!.isNotEmpty
+                                ? NetworkImage(req.photoURL!)
+                                : null,
+                        backgroundColor: Colors.orange[100],
+                        child: req.photoURL == null || req.photoURL!.isEmpty
+                            ? Text(
+                                req.displayName.isNotEmpty
+                                    ? req.displayName[0]
+                                    : '?',
+                                style: TextStyle(
+                                    color: Colors.orange[800],
+                                    fontWeight: FontWeight.bold))
+                            : null,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             req.displayName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                                color: Color(0xFF7C2D12)),
                           ),
                           Text(
-                            'Wants to be your friend!',
+                            'New friend request! ✨',
                             style: TextStyle(
-                                color: Colors.grey[600], fontSize: 12),
+                                color: Colors.orange[700],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -884,24 +1193,48 @@ class _SocialScreenState extends State<SocialScreen>
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          onPressed: () =>
-                              service.acceptFriendRequest(me.uid, req.uid),
-                          icon: const Icon(Icons.check_circle,
-                              color: Colors.green, size: 32),
+                        Material(
+                          color: Colors.green[400],
+                          borderRadius: BorderRadius.circular(12),
+                          elevation: 2,
+                          shadowColor: Colors.green.withValues(alpha: 0.3),
+                          child: InkWell(
+                            onTap: () =>
+                                service.acceptFriendRequest(me.uid, req.uid),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              child: const Icon(Icons.check_rounded,
+                                  color: Colors.white, size: 24),
+                            ),
+                          ),
                         ),
-                        IconButton(
-                          onPressed: () =>
-                              service.declineFriendRequest(me.uid, req.uid),
-                          icon: Icon(Icons.cancel,
-                              color: Colors.red[300], size: 32),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          borderOnForeground: true,
+                          child: InkWell(
+                            onTap: () =>
+                                service.declineFriendRequest(me.uid, req.uid),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[200]!),
+                              ),
+                              child: Icon(Icons.close_rounded,
+                                  color: Colors.grey[400], size: 24),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9));
+            ).animate().fadeIn().slideX(begin: 0.05);
           }).toList(),
         );
       },
@@ -972,100 +1305,216 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildVisitorCard(HouseVisit visit) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple[100]!,
-            Colors.purple[50]!,
+            const Color(0xFFF3E8FF),
+            const Color(0xFFFAF5FF),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE9D5FF), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: visit.visitorPhotoUrl != null
-                ? NetworkImage(visit.visitorPhotoUrl!)
-                : null,
-            child: visit.visitorPhotoUrl == null
-                ? Text(visit.visitorName[0])
-                : null,
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: 24,
+              backgroundImage: visit.visitorPhotoUrl != null &&
+                      visit.visitorPhotoUrl!.isNotEmpty
+                  ? NetworkImage(visit.visitorPhotoUrl!)
+                  : null,
+              backgroundColor: Colors.purple[100],
+              child: visit.visitorPhotoUrl == null ||
+                      visit.visitorPhotoUrl!.isEmpty
+                  ? Text(
+                      visit.visitorName.isNotEmpty
+                          ? visit.visitorName[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                          color: Colors.purple[700],
+                          fontWeight: FontWeight.bold),
+                    )
+                  : null,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${visit.visitorName} visited your house!',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  'House Visitor 🏠',
+                  style: TextStyle(
+                    color: Colors.purple[700],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  '${visit.visitorName} visited you!',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF4B237B),
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   _formatTime(visit.timestamp),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(color: Colors.purple[300], fontSize: 12),
                 ),
               ],
             ),
           ),
-          const Text('🏠', style: TextStyle(fontSize: 28)),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.6),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.temple_hindu_rounded,
+                color: Colors.purple, size: 24),
+          ),
         ],
       ),
-    ).animate().fadeIn().shimmer(delay: 500.ms, duration: 1500.ms);
+    ).animate().fadeIn().slideX(begin: -0.05).shimmer(
+        delay: 800.ms,
+        duration: 1800.ms,
+        color: Colors.white.withValues(alpha: 0.3));
   }
 
   Widget _buildSupportCard(SupportAction support, int index) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: support.fromUserPhotoUrl != null
-                  ? NetworkImage(support.fromUserPhotoUrl!)
-                  : null,
-              child: support.fromUserPhotoUrl == null
-                  ? Text(support.fromUserName[0])
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(color: Colors.black87),
-                      children: [
-                        TextSpan(
-                          text: support.fromUserName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: ' ${support.actionDisplayName}'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatTime(support.timestamp),
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundImage: support.fromUserPhotoUrl != null &&
+                        support.fromUserPhotoUrl!.isNotEmpty
+                    ? NetworkImage(support.fromUserPhotoUrl!)
+                    : null,
+                backgroundColor: AppColors.lightPrimary.withValues(alpha: 0.1),
+                child: support.fromUserPhotoUrl == null ||
+                        support.fromUserPhotoUrl!.isEmpty
+                    ? Text(
+                        support.fromUserName.isNotEmpty
+                            ? support.fromUserName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                            color: AppColors.lightPrimary,
+                            fontWeight: FontWeight.bold),
+                      )
+                    : null,
               ),
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    support.actionEmoji,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                        color: AppColors.lightText, fontSize: 14),
+                    children: [
+                      TextSpan(
+                        text: support.fromUserName,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      TextSpan(
+                        text: ' ${support.actionDisplayName}',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.access_time_rounded,
+                        size: 12, color: Colors.grey[400]),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatTime(support.timestamp),
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            Text(
-              support.actionEmoji,
-              style: const TextStyle(fontSize: 28),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.lightPrimary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
-        ),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.lightPrimary,
+              size: 18,
+            ),
+          ),
+        ],
       ),
     )
-        .animate(delay: Duration(milliseconds: 60 * index))
-        .fadeIn()
-        .slideX(begin: 0.1);
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .fadeIn(duration: 400.ms)
+        .slideX(begin: 0.05, duration: 400.ms);
   }
 
   String _formatTime(DateTime time) {

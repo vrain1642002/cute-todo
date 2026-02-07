@@ -9,7 +9,7 @@ import 'kanban_task_card.dart';
 
 class KanbanColumn extends StatefulWidget {
   final String title;
-  final IconData icon;
+  final Widget headerIcon;
   final TodoStatus status;
   final List<TodoModel> todos;
   final Color headerColor;
@@ -28,7 +28,7 @@ class KanbanColumn extends StatefulWidget {
   const KanbanColumn({
     super.key,
     required this.title,
-    required this.icon,
+    required this.headerIcon,
     required this.status,
     required this.todos,
     required this.headerColor,
@@ -111,7 +111,7 @@ class _KanbanColumnState extends State<KanbanColumn> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: Icon(widget.icon, size: 18, color: Colors.white),
+                  child: widget.headerIcon,
                 ),
               ),
               const SizedBox(width: 10),

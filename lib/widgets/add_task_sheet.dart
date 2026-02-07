@@ -310,208 +310,186 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Merged Priority & Category Row
-                        Row(
+                        // Priority Section
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Priority Section
-                            Expanded(
-                              flex: 4,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.translate('priority'),
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children:
-                                          TodoPriority.values.map((priority) {
-                                        final isSelected =
-                                            _priority == priority;
-                                        Color color;
-                                        String emoji;
-                                        String label = '';
+                            Text(
+                              loc.translate('priority'),
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: TodoPriority.values.map((priority) {
+                                  final isSelected = _priority == priority;
+                                  Color color;
+                                  String emoji;
+                                  String label = '';
 
-                                        switch (priority) {
-                                          case TodoPriority.low:
-                                            color = AppColors.priorityLow;
-                                            emoji = '🌱';
-                                            label =
-                                                loc.translate('priority_low');
-                                            break;
-                                          case TodoPriority.medium:
-                                            color = AppColors.priorityMedium;
-                                            emoji = '⚡';
-                                            label = loc
-                                                .translate('priority_medium');
-                                            break;
-                                          case TodoPriority.high:
-                                            color = AppColors.priorityHigh;
-                                            emoji = '🔥';
-                                            label =
-                                                loc.translate('priority_high');
-                                            break;
-                                        }
+                                  switch (priority) {
+                                    case TodoPriority.low:
+                                      color = AppColors.priorityLow;
+                                      emoji = '🌱';
+                                      label = loc.translate('priority_low');
+                                      break;
+                                    case TodoPriority.medium:
+                                      color = AppColors.priorityMedium;
+                                      emoji = '⚡';
+                                      label = loc.translate('priority_medium');
+                                      break;
+                                    case TodoPriority.high:
+                                      color = AppColors.priorityHigh;
+                                      emoji = '🔥';
+                                      label = loc.translate('priority_high');
+                                      break;
+                                  }
 
-                                        return GestureDetector(
-                                          onTap: () => setState(
-                                              () => _priority = priority),
-                                          child: AnimatedContainer(
-                                            duration: const Duration(
-                                                milliseconds: 200),
-                                            margin:
-                                                const EdgeInsets.only(right: 8),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 8),
-                                            decoration: BoxDecoration(
+                                  return GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _priority = priority),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? color.withValues(alpha: 0.15)
+                                            : Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? color
+                                              : Colors.transparent,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(emoji,
+                                              style: const TextStyle(
+                                                  fontSize: 20)),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            label,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.w500,
                                               color: isSelected
-                                                  ? color.withValues(
-                                                      alpha: 0.15)
-                                                  : Colors.grey[100],
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: isSelected
-                                                    ? color
-                                                    : Colors.transparent,
-                                                width: 2,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(emoji,
-                                                    style: const TextStyle(
-                                                        fontSize: 18)),
-                                                if (isSelected) ...[
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    label,
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: color,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
+                                                  ? color
+                                                  : Colors.grey[700],
                                             ),
                                           ),
-                                        );
-                                      }).toList(),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            // Category Section
-                            Expanded(
-                              flex: 6,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.translate('category_title'),
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: TaskCategory.values.map((cat) {
-                                        final isSelected = _category == cat;
-                                        String emoji;
-                                        String label;
-                                        Color color;
+                          ],
+                        ),
+                        const SizedBox(height: 24),
 
-                                        switch (cat) {
-                                          case TaskCategory.draw:
-                                            color = Colors.purple;
-                                            emoji = '🎨';
-                                            label = loc.translate('cat_draw');
-                                            break;
-                                          case TaskCategory.code:
-                                            color = Colors.blueGrey;
-                                            emoji = '💻';
-                                            label = loc.translate('cat_code');
-                                            break;
-                                          case TaskCategory.study:
-                                            color = Colors.orange;
-                                            emoji = '📚';
-                                            label = loc.translate('cat_study');
-                                            break;
-                                          case TaskCategory.game:
-                                            color = Colors.redAccent;
-                                            emoji = '🎮';
-                                            label = loc.translate('cat_game');
-                                            break;
-                                          case TaskCategory.other:
-                                            color = Colors.grey;
-                                            emoji = '📦';
-                                            label = loc.translate('cat_other');
-                                            break;
-                                        }
+                        // Category Section
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              loc.translate('category_title'),
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: TaskCategory.values.map((cat) {
+                                  final isSelected = _category == cat;
+                                  String emoji;
+                                  String label;
+                                  Color color;
 
-                                        return GestureDetector(
-                                          onTap: () =>
-                                              setState(() => _category = cat),
-                                          child: AnimatedContainer(
-                                            duration: const Duration(
-                                                milliseconds: 200),
-                                            margin:
-                                                const EdgeInsets.only(right: 8),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 8),
-                                            decoration: BoxDecoration(
+                                  switch (cat) {
+                                    case TaskCategory.draw:
+                                      color = Colors.purple;
+                                      emoji = '🎨';
+                                      label = loc.translate('cat_draw');
+                                      break;
+                                    case TaskCategory.code:
+                                      color = Colors.blueGrey;
+                                      emoji = '💻';
+                                      label = loc.translate('cat_code');
+                                      break;
+                                    case TaskCategory.study:
+                                      color = Colors.orange;
+                                      emoji = '📚';
+                                      label = loc.translate('cat_study');
+                                      break;
+                                    case TaskCategory.game:
+                                      color = Colors.redAccent;
+                                      emoji = '🎮';
+                                      label = loc.translate('cat_game');
+                                      break;
+                                    case TaskCategory.other:
+                                      color = Colors.grey;
+                                      emoji = '📦';
+                                      label = loc.translate('cat_other');
+                                      break;
+                                  }
+
+                                  return GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _category = cat),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? color.withValues(alpha: 0.15)
+                                            : Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? color
+                                              : Colors.transparent,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(emoji,
+                                              style: const TextStyle(
+                                                  fontSize: 20)),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            label,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.w500,
                                               color: isSelected
-                                                  ? color.withValues(
-                                                      alpha: 0.15)
-                                                  : Colors.grey[100],
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: isSelected
-                                                    ? color
-                                                    : Colors.transparent,
-                                                width: 1.5,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(emoji,
-                                                    style: const TextStyle(
-                                                        fontSize: 16)),
-                                                if (isSelected) ...[
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    label,
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: color,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
+                                                  ? color
+                                                  : Colors.grey[700],
                                             ),
                                           ),
-                                        );
-                                      }).toList(),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
                             ),
                           ],

@@ -151,7 +151,7 @@ class _KanbanBoardState extends State<KanbanBoard> {
         children: [
           KanbanColumn(
             title: context.read<LocalizationService>().translate('todo'),
-            icon: Icons.wb_sunny_rounded,
+            headerIcon: const Text('📋', style: TextStyle(fontSize: 18)),
             status: TodoStatus.todo,
             todos: todoTasks,
             headerColor: AppColors.columnTodo,
@@ -167,7 +167,7 @@ class _KanbanBoardState extends State<KanbanBoard> {
           ),
           KanbanColumn(
             title: context.read<LocalizationService>().translate('in_progress'),
-            icon: Icons.rocket_launch_rounded,
+            headerIcon: const Text('🚀', style: TextStyle(fontSize: 18)),
             status: TodoStatus.inProgress,
             todos: inProgressTasks,
             headerColor: AppColors.columnInProgress,
@@ -183,7 +183,7 @@ class _KanbanBoardState extends State<KanbanBoard> {
           ),
           KanbanColumn(
             title: context.read<LocalizationService>().translate('done'),
-            icon: Icons.star_rounded,
+            headerIcon: const Text('✅', style: TextStyle(fontSize: 18)),
             status: TodoStatus.completed,
             todos: doneTasks,
             headerColor: AppColors.columnDone,

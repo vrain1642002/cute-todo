@@ -206,7 +206,8 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                               children: [
                                 KanbanColumn(
                                   title: loc.translate('todo'),
-                                  icon: Icons.wb_sunny_rounded,
+                                  headerIcon: const Text('📋',
+                                      style: TextStyle(fontSize: 18)),
                                   status: TodoStatus.todo,
                                   todos: todoTasks,
                                   headerColor: AppColors.columnTodo,
@@ -219,7 +220,8 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                                 ),
                                 KanbanColumn(
                                   title: loc.translate('in_progress'),
-                                  icon: Icons.rocket_launch_rounded,
+                                  headerIcon: const Text('🚀',
+                                      style: TextStyle(fontSize: 18)),
                                   status: TodoStatus.inProgress,
                                   todos: inProgressTasks,
                                   headerColor: AppColors.columnInProgress,
@@ -232,7 +234,8 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                                 ),
                                 KanbanColumn(
                                   title: loc.translate('done'),
-                                  icon: Icons.star_rounded,
+                                  headerIcon: const Text('✅',
+                                      style: TextStyle(fontSize: 18)),
                                   status: TodoStatus.completed,
                                   todos: doneTasks,
                                   headerColor: AppColors.columnDone,
