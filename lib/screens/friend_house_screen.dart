@@ -206,8 +206,10 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                               children: [
                                 KanbanColumn(
                                   title: loc.translate('todo'),
-                                  headerIcon: const Text('📋',
-                                      style: TextStyle(fontSize: 18)),
+                                  headerIcon: const Icon(
+                                      Icons.assignment_rounded,
+                                      size: 18,
+                                      color: Colors.white),
                                   status: TodoStatus.todo,
                                   todos: todoTasks,
                                   headerColor: AppColors.columnTodo,
@@ -220,8 +222,10 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                                 ),
                                 KanbanColumn(
                                   title: loc.translate('in_progress'),
-                                  headerIcon: const Text('🚀',
-                                      style: TextStyle(fontSize: 18)),
+                                  headerIcon: const Icon(
+                                      Icons.rocket_launch_rounded,
+                                      size: 18,
+                                      color: Colors.white),
                                   status: TodoStatus.inProgress,
                                   todos: inProgressTasks,
                                   headerColor: AppColors.columnInProgress,
@@ -234,8 +238,10 @@ class _FriendHouseScreenState extends State<FriendHouseScreen> {
                                 ),
                                 KanbanColumn(
                                   title: loc.translate('done'),
-                                  headerIcon: const Text('✅',
-                                      style: TextStyle(fontSize: 18)),
+                                  headerIcon: const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 18,
+                                      color: Colors.white),
                                   status: TodoStatus.completed,
                                   todos: doneTasks,
                                   headerColor: AppColors.columnDone,

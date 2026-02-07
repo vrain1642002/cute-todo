@@ -36,6 +36,10 @@ class KanbanBoard extends StatefulWidget {
 
 class _KanbanBoardState extends State<KanbanBoard> {
   List<TodoModel> _todos = [];
+  List<TodoModel> _todoTasks = [];
+  List<TodoModel> _inProgressTasks = [];
+  List<TodoModel> _doneTasks = [];
+
   bool _isInitialLoad = true;
   StreamSubscription<List<TodoModel>>? _subscription;
 
@@ -59,34 +63,44 @@ class _KanbanBoardState extends State<KanbanBoard> {
         .getAllUserTodos(authService.currentUser!.uid)
         .listen((todos) {
       if (mounted) {
-        setState(() {
-          _todos = todos;
-          _isInitialLoad = false;
-        });
+        _updateCategorizedTasks(todos);
       }
+    });
+  }
+
+  void _updateCategorizedTasks(List<TodoModel> todos) {
+    // Sort once for efficiency
+    final sorted = List<TodoModel>.from(todos)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    setState(() {
+      _todos = sorted;
+      _todoTasks = _todos.where((t) => t.status == TodoStatus.todo).toList();
+      _inProgressTasks =
+          _todos.where((t) => t.status == TodoStatus.inProgress).toList();
+      _doneTasks =
+          _todos.where((t) => t.status == TodoStatus.completed).toList();
+      _isInitialLoad = false;
     });
   }
 
   /// Optimistic UI update: immediately update local state
   void _handleLocalDrop(TodoModel todo, TodoStatus newStatus, int newIndex) {
-    // 🚀 OPTIMISTIC UPDATE: Update local state immediately
-    setState(() {
-      // Remove from current position
-      _todos.removeWhere((t) => t.id == todo.id);
+    // Create updated todo
+    final updatedTodo = todo.copyWith(
+      status: newStatus,
+      completedAt: newStatus == TodoStatus.completed ? DateTime.now() : null,
+      clearCompletedAt: newStatus != TodoStatus.completed,
+      orderIndex: newIndex,
+    );
 
-      // Create updated todo with new status
-      final updatedTodo = todo.copyWith(
-        status: newStatus,
-        completedAt: newStatus == TodoStatus.completed ? DateTime.now() : null,
-        clearCompletedAt: newStatus != TodoStatus.completed,
-        orderIndex: newIndex,
-      );
+    // Update local state immediately
+    final newTodos = List<TodoModel>.from(_todos);
+    newTodos.removeWhere((t) => t.id == todo.id);
+    newTodos.add(updatedTodo);
+    _updateCategorizedTasks(newTodos);
 
-      // Insert at new position
-      _todos.add(updatedTodo);
-    });
-
-    // Fire the actual update (no await - fire and forget)
+    // Fire actual update
     widget.onTodoDropped(todo, newStatus, newIndex);
   }
 
@@ -130,17 +144,7 @@ class _KanbanBoardState extends State<KanbanBoard> {
       );
     }
 
-    final todoTasks = _todos.where((t) => t.status == TodoStatus.todo).toList()
-      ..sort(
-          (a, b) => b.createdAt.compareTo(a.createdAt)); // Sort by newest first
-    final inProgressTasks = _todos
-        .where((t) => t.status == TodoStatus.inProgress)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final doneTasks = _todos
-        .where((t) => t.status == TodoStatus.completed)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final loc = context.read<LocalizationService>();
 
     return SingleChildScrollView(
       controller: widget.scrollController,
@@ -150,10 +154,11 @@ class _KanbanBoardState extends State<KanbanBoard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           KanbanColumn(
-            title: context.read<LocalizationService>().translate('todo'),
-            headerIcon: const Text('📋', style: TextStyle(fontSize: 18)),
+            title: loc.translate('todo'),
+            headerIcon: const Icon(Icons.assignment_rounded,
+                size: 18, color: Colors.white),
             status: TodoStatus.todo,
-            todos: todoTasks,
+            todos: _todoTasks,
             headerColor: AppColors.columnTodo,
             backgroundColor: AppColors.columnTodoBg,
             borderColor: AppColors.columnTodoBorder,
@@ -166,10 +171,11 @@ class _KanbanBoardState extends State<KanbanBoard> {
             onDragEnd: widget.onDragEnd,
           ),
           KanbanColumn(
-            title: context.read<LocalizationService>().translate('in_progress'),
-            headerIcon: const Text('🚀', style: TextStyle(fontSize: 18)),
+            title: loc.translate('in_progress'),
+            headerIcon: const Icon(Icons.rocket_launch_rounded,
+                size: 18, color: Colors.white),
             status: TodoStatus.inProgress,
-            todos: inProgressTasks,
+            todos: _inProgressTasks,
             headerColor: AppColors.columnInProgress,
             backgroundColor: AppColors.columnInProgressBg,
             borderColor: AppColors.columnInProgressBorder,
@@ -182,10 +188,11 @@ class _KanbanBoardState extends State<KanbanBoard> {
             onDragEnd: widget.onDragEnd,
           ),
           KanbanColumn(
-            title: context.read<LocalizationService>().translate('done'),
-            headerIcon: const Text('✅', style: TextStyle(fontSize: 18)),
+            title: loc.translate('done'),
+            headerIcon: const Icon(Icons.check_circle_rounded,
+                size: 18, color: Colors.white),
             status: TodoStatus.completed,
-            todos: doneTasks,
+            todos: _doneTasks,
             headerColor: AppColors.columnDone,
             backgroundColor: AppColors.columnDoneBg,
             borderColor: AppColors.columnDoneBorder,
