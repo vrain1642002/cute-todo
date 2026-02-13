@@ -9,6 +9,7 @@ import '../services/localization_service.dart';
 import '../services/firestore_service.dart';
 import '../services/image_upload_service.dart';
 import '../services/theme_service.dart';
+import '../services/notification_service.dart';
 import '../models/user_model.dart';
 import '../models/todo_model.dart';
 import '../core/constants/colors.dart';
@@ -111,6 +112,14 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
 
     if (user != null) {
       final userData = await authService.getUserData(user.uid);
+
+      // Update FCM token on app start/resume
+      if (mounted) {
+        final notificationService = context.read<NotificationService>();
+        await notificationService.saveTokenToUser(user.uid);
+        notificationService.setupTokenRefresh(user.uid);
+      }
+
       if (mounted) {
         setState(() {
           _currentUser = userData;

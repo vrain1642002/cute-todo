@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import 'home_screen.dart';
 import '../core/constants/colors.dart';
 
@@ -23,6 +24,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = await authService.signInWithGoogle();
 
       if (user != null && mounted) {
+        // Save FCM Token
+        final notificationService = context.read<NotificationService>();
+        await notificationService.saveTokenToUser(user.uid);
+        notificationService.setupTokenRefresh(user.uid);
+
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
@@ -214,7 +220,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             .shimmer(delay: 1500.ms, duration: 1.seconds),
 
                       const SizedBox(height: 24),
-
                     ],
                   ),
                 ),

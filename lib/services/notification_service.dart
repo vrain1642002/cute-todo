@@ -93,7 +93,12 @@ class NotificationService {
   /// Get FCM token for this device
   Future<String?> getToken() async {
     try {
-      return await _messaging.getToken();
+      // Ensure we have permission first (though init should handle it)
+      // On iOS/Web, getPermission might be needed if not granted yet.
+
+      final token = await _messaging.getToken();
+      debugPrint('FCM Token retrieved: $token');
+      return token;
     } catch (e) {
       debugPrint('Error getting FCM token: $e');
       return null;
@@ -102,13 +107,29 @@ class NotificationService {
 
   /// Save FCM token to user document
   Future<void> saveTokenToUser(String userId) async {
-    final token = await getToken();
-    if (token != null) {
-      await _firestore.collection('users').doc(userId).update({
-        'fcmToken': token,
-        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-      });
-      debugPrint('FCM token saved for user: $userId');
+    try {
+      debugPrint('Attempting to save FCM token for user: $userId');
+      final token = await getToken();
+
+      if (token != null) {
+        await _firestore.collection('users').doc(userId).set({
+          'fcmToken': token,
+          'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        debugPrint('✅ FCM token saved successfully for user: $userId');
+      } else {
+        debugPrint('❌ Failed to save FCM token: Token is null');
+      }
+    } catch (e) {
+      debugPrint('❌ Error saving FCM token to Firestore: $e');
     }
+  }
+
+  /// Listen for token refresh
+  void setupTokenRefresh(String userId) {
+    _messaging.onTokenRefresh.listen((newToken) async {
+      debugPrint('FCM Token Refreshed: $newToken');
+      await saveTokenToUser(userId);
+    });
   }
 }
