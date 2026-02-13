@@ -10,6 +10,7 @@ import '../services/localization_service.dart';
 import '../core/utils/image_provider_util.dart';
 import '../services/image_upload_service.dart';
 import '../services/auth_service.dart';
+import '../services/backend_service.dart';
 
 class AddTaskSheet extends StatefulWidget {
   final VoidCallback onTaskAdded;
@@ -173,6 +174,25 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         _category,
         remoteUrls,
       );
+
+      // Trigger Backend Notification (Email + FCM)
+      if (mounted) {
+        final userEmail = authService.currentUser?.email;
+        final userName = authService.currentUser?.displayName;
+
+        BackendService.sendTaskNotification(
+          email: userEmail,
+          userName: userName,
+          taskTitle: _titleController.text.trim(),
+          title: 'New Task: ${_titleController.text.trim()}',
+          body: _descriptionController.text.trim().isNotEmpty
+              ? _descriptionController.text.trim()
+              : 'You have a new task.',
+          dueTime:
+              _dueDate != null ? DateFormat('HH:mm').format(_dueDate!) : null,
+          languageCode: context.read<LocalizationService>().locale.languageCode,
+        );
+      }
 
       if (mounted) {
         widget.onTaskAdded();
