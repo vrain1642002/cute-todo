@@ -165,7 +165,23 @@ class _KanbanBoardScreenState extends State<KanbanBoardScreen> {
             imageUrls: imageUrls,
           );
 
-          await firestoreService.createTodo(newTodo);
+          try {
+            await firestoreService
+                .createTodo(newTodo)
+                .timeout(const Duration(seconds: 5));
+          } catch (e) {
+            debugPrint('Task creation timed out or failed: $e');
+            // We assume it might eventually succeed or fail in background if it was just a network delay.
+            // But to unfreeze the UI, we swallow the timeout error here after logging it.
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Network slow, saving task in background...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          }
           // Notification is handled by BackendService in AddTaskSheet
         },
       ),

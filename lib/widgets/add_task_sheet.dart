@@ -160,11 +160,28 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
       final authService = context.read<AuthService>();
       final userId = authService.currentUser?.uid ?? 'anonymous';
 
-      // Upload images to Cloudinary before creating task
-      final List<String> remoteUrls =
-          await _imageUploadService.uploadFiles(_selectedImages, userId);
+      // Upload images to Cloudinary (with 15s timeout to prevent hanging)
+      List<String> remoteUrls = [];
+      try {
+        if (_selectedImages.isNotEmpty) {
+          remoteUrls = await _imageUploadService
+              .uploadFiles(_selectedImages, userId)
+              .timeout(const Duration(seconds: 15));
+        }
+      } catch (e) {
+        debugPrint('Image upload timed out or failed: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Image upload failed, creating task without images...')),
+          );
+        }
+        // Proceed without images to avoid blocking the user
+      }
 
-      await widget.onTaskCreate(
+      // Fire and forget: Create task in background so UI doesn't freeze
+      widget.onTaskCreate(
         _titleController.text.trim(),
         _descriptionController.text.trim().isEmpty
             ? null
@@ -175,24 +192,27 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         remoteUrls,
       );
 
-      // Trigger Backend Notification (Email + FCM)
-      if (mounted) {
-        final userEmail = authService.currentUser?.email;
-        final userName = authService.currentUser?.displayName;
+      // Trigger Backend Notification (Email + FCM) - Non-blocking
+      // We don't await this to ensure the UI closes immediately after Firestore save
+      final userEmail = authService.currentUser?.email;
+      final userName = authService.currentUser?.displayName;
+      final langCode = loc.locale.languageCode;
+      final taskTitle = _titleController.text.trim();
+      final bodyText = _descriptionController.text.trim().isNotEmpty
+          ? _descriptionController.text.trim()
+          : 'You have a new task.';
+      final dueTimeStr =
+          _dueDate != null ? DateFormat('HH:mm').format(_dueDate!) : null;
 
-        BackendService.sendTaskNotification(
-          email: userEmail,
-          userName: userName,
-          taskTitle: _titleController.text.trim(),
-          title: 'New Task: ${_titleController.text.trim()}',
-          body: _descriptionController.text.trim().isNotEmpty
-              ? _descriptionController.text.trim()
-              : 'You have a new task.',
-          dueTime:
-              _dueDate != null ? DateFormat('HH:mm').format(_dueDate!) : null,
-          languageCode: context.read<LocalizationService>().locale.languageCode,
-        );
-      }
+      BackendService.sendTaskNotification(
+        email: userEmail,
+        userName: userName,
+        taskTitle: taskTitle,
+        title: 'New Task: $taskTitle',
+        body: bodyText,
+        dueTime: dueTimeStr,
+        languageCode: langCode,
+      ).catchError((e) => debugPrint('Silently failed to notify backend: $e'));
 
       if (mounted) {
         widget.onTaskAdded();

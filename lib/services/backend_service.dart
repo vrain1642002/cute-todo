@@ -19,21 +19,23 @@ class BackendService {
     try {
       final uri = Uri.parse('$_baseUrl/send-notification');
 
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'token': fcmToken,
-          'email': email,
-          'title': title,
-          'body': body,
-          'userName': userName,
-          'taskTitle': taskTitle,
-          'dueTime': dueTime,
-          'minutesLeft': minutesLeft,
-          'languageCode': languageCode,
-        }),
-      );
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'token': fcmToken,
+              'email': email,
+              'title': title,
+              'body': body,
+              'userName': userName,
+              'taskTitle': taskTitle,
+              'dueTime': dueTime,
+              'minutesLeft': minutesLeft,
+              'languageCode': languageCode,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         debugPrint('Backend notification sent successfully');

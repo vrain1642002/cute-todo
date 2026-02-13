@@ -10,6 +10,7 @@ import '../services/image_upload_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
 import 'package:cached_network_image/cached_network_image.dart';
+import '../services/backend_service.dart';
 
 class TaskDetailSheet extends StatefulWidget {
   final TodoModel todo;
@@ -151,6 +152,32 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
       if (widget.onTaskUpdate != null) {
         await widget.onTaskUpdate!(updatedTodo);
+      }
+
+      // Trigger Backend Notification for Update
+      if (mounted) {
+        final authService = context.read<AuthService>();
+        final userEmail = authService.currentUser?.email;
+        final userName = authService.currentUser?.displayName;
+        final loc = context.read<LocalizationService>();
+
+        try {
+          debugPrint('Sending update notification to backend...');
+          BackendService.sendTaskNotification(
+            email: userEmail,
+            userName: userName,
+            taskTitle: _titleController.text.trim(),
+            title: 'Task Updated: ${_titleController.text.trim()}',
+            body: _descriptionController.text.trim().isNotEmpty
+                ? _descriptionController.text.trim()
+                : 'Task updated.',
+            dueTime:
+                _dueDate != null ? DateFormat('HH:mm').format(_dueDate!) : null,
+            languageCode: loc.locale.languageCode,
+          );
+        } catch (e) {
+          debugPrint('Failed to send update notification: $e');
+        }
       }
 
       if (mounted) {
