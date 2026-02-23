@@ -237,6 +237,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
   @override
   Widget build(BuildContext context) {
     final loc = context.read<LocalizationService>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final surfaceColor = colorScheme.surface;
+
+    final fillColor =
+        isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[50]!;
+    final chipBgColor =
+        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100]!;
+    final subtextColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -246,7 +257,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         constraints: const BoxConstraints(maxWidth: 640),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -269,18 +280,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     children: [
                       Text(
                         loc.translate('new_task_title'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.lightText,
+                          color: textColor,
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon:
-                            const Icon(Icons.close_rounded, color: Colors.grey),
+                        icon: Icon(Icons.close_rounded, color: subtextColor),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.grey[100],
+                          backgroundColor: chipBgColor,
                           padding: const EdgeInsets.all(8),
                         ),
                       ),
@@ -303,11 +313,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           focusNode: _titleFocusNode,
                           decoration: InputDecoration(
                             hintText: loc.translate('what_needs_to_be_done'),
-                            hintStyle: TextStyle(
-                                color: Colors.grey[400], fontSize: 18),
+                            hintStyle:
+                                TextStyle(color: subtextColor, fontSize: 18),
                             border: InputBorder.none,
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: fillColor,
                             contentPadding: const EdgeInsets.all(20),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -315,12 +325,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                  color: AppColors.lightPrimary, width: 2),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? AppColors.darkPrimary
+                                      : AppColors.lightPrimary,
+                                  width: 2),
                             ),
                           ),
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: textColor),
                         ),
                         const SizedBox(height: 16),
 
@@ -329,13 +344,14 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           controller: _descriptionController,
                           maxLines: 3,
                           minLines: 1,
+                          style: TextStyle(color: textColor),
                           decoration: InputDecoration(
                             hintText: loc.translate('add_details_optional'),
-                            hintStyle: TextStyle(
-                                color: Colors.grey[400], fontSize: 14),
+                            hintStyle:
+                                TextStyle(color: subtextColor, fontSize: 14),
                             border: InputBorder.none,
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: fillColor,
                             contentPadding: const EdgeInsets.all(20),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -343,8 +359,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                  color: AppColors.lightPrimary, width: 2),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? AppColors.darkPrimary
+                                      : AppColors.lightPrimary,
+                                  width: 2),
                             ),
                           ),
                         ),
@@ -356,8 +375,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           children: [
                             Text(
                               loc.translate('priority'),
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor),
                             ),
                             const SizedBox(height: 8),
                             SingleChildScrollView(
@@ -399,7 +420,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? color.withValues(alpha: 0.15)
-                                            : Colors.grey[100],
+                                            : chipBgColor,
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(
                                           color: isSelected
@@ -424,7 +445,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                                   : FontWeight.w500,
                                               color: isSelected
                                                   ? color
-                                                  : Colors.grey[700],
+                                                  : subtextColor,
                                             ),
                                           ),
                                         ],
@@ -444,8 +465,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           children: [
                             Text(
                               loc.translate('category_title'),
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor),
                             ),
                             const SizedBox(height: 8),
                             SingleChildScrollView(
@@ -497,7 +520,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? color.withValues(alpha: 0.15)
-                                            : Colors.grey[100],
+                                            : chipBgColor,
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(
                                           color: isSelected
@@ -522,7 +545,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                                   : FontWeight.w500,
                                               color: isSelected
                                                   ? color
-                                                  : Colors.grey[700],
+                                                  : subtextColor,
                                             ),
                                           ),
                                         ],
@@ -541,8 +564,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           children: [
                             Text(
                               loc.translate('attachments'),
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor),
                             ),
                             const Spacer(),
                             // IconButton(
@@ -621,7 +646,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: chipBgColor,
                               borderRadius: BorderRadius.circular(16),
                               border: _dueDate != null
                                   ? Border.all(color: AppColors.info, width: 2)
@@ -633,7 +658,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   Icons.calendar_today_rounded,
                                   color: _dueDate != null
                                       ? AppColors.info
-                                      : AppColors.lightTextSecondary,
+                                      : subtextColor,
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
@@ -644,8 +669,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: _dueDate != null
-                                        ? AppColors.lightText
-                                        : AppColors.lightTextSecondary,
+                                        ? textColor
+                                        : subtextColor,
                                     fontWeight: _dueDate != null
                                         ? FontWeight.w500
                                         : FontWeight.normal,
@@ -656,9 +681,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                                   GestureDetector(
                                     onTap: () =>
                                         setState(() => _dueDate = null),
-                                    child: const Icon(Icons.close,
-                                        size: 20,
-                                        color: AppColors.lightTextSecondary),
+                                    child: Icon(Icons.close,
+                                        size: 20, color: subtextColor),
                                   ),
                               ],
                             ),
@@ -673,13 +697,17 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _createTask,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.lightPrimary,
+                              backgroundColor: isDark
+                                  ? AppColors.darkPrimary
+                                  : AppColors.lightPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               elevation: 0,
-                              shadowColor:
-                                  AppColors.lightPrimary.withValues(alpha: 0.4),
+                              shadowColor: (isDark
+                                      ? AppColors.darkPrimary
+                                      : AppColors.lightPrimary)
+                                  .withValues(alpha: 0.4),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
